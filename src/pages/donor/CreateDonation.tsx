@@ -5,8 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { LocationPicker } from "@/components/LocationPicker";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, UtensilsCrossed, Apple, Package as PackageIcon, Wheat, Cookie } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { z } from "zod";
 
 const donationSchema = z.object({
@@ -14,6 +16,7 @@ const donationSchema = z.object({
   description: z.string().min(10, "Description must be at least 10 characters"),
   foodType: z.string().min(2, "Food type is required"),
   quantity: z.string().min(1, "Quantity is required"),
+  urgency: z.enum(["urgent", "normal", "flexible"]),
   expiryDate: z.string(),
   pickupAddress: z.string().min(5, "Address is required"),
   pickupCity: z.string().min(2, "City is required"),
@@ -29,11 +32,31 @@ const CreateDonation = () => {
     description: "",
     foodType: "",
     quantity: "",
+    urgency: "normal" as "urgent" | "normal" | "flexible",
     expiryDate: "",
     pickupAddress: "",
     pickupCity: "",
     pickupTime: "",
+    pickupLatitude: null as number | null,
+    pickupLongitude: null as number | null,
   });
+
+  const foodTypes = [
+    { value: "cooked", label: "Cooked Food", icon: UtensilsCrossed },
+    { value: "raw", label: "Raw Ingredients", icon: Wheat },
+    { value: "packaged", label: "Packaged Food", icon: PackageIcon },
+    { value: "fruits", label: "Fruits & Veggies", icon: Apple },
+    { value: "bakery", label: "Bakery Items", icon: Cookie },
+  ];
+
+  const handleLocationSelect = (lat: number, lng: number, address: string) => {
+    setFormData({
+      ...formData,
+      pickupLatitude: lat,
+      pickupLongitude: lng,
+      pickupAddress: address,
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,10 +86,13 @@ const CreateDonation = () => {
         description: formData.description,
         food_type: formData.foodType,
         quantity: formData.quantity,
+        urgency: formData.urgency,
         expiry_date: formData.expiryDate,
         pickup_address: formData.pickupAddress,
         pickup_city: formData.pickupCity,
         pickup_time: formData.pickupTime,
+        pickup_latitude: formData.pickupLatitude,
+        pickup_longitude: formData.pickupLongitude,
         status: "pending",
       });
 
@@ -91,7 +117,7 @@ const CreateDonation = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="px-6 py-8 max-w-md mx-auto">
+      <div className="px-6 py-8 max-w-2xl mx-auto">
         <Button
           variant="ghost"
           size="icon"
@@ -106,7 +132,7 @@ const CreateDonation = () => {
           Share your leftover food to help those in need
         </p>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="title">Title</Label>
             <Input
@@ -126,24 +152,56 @@ const CreateDonation = () => {
               placeholder="Describe the food items..."
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="min-h-24 rounded-xl"
+              className="min-h-24 rounded-xl resize-none"
               required
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="foodType">Food Type</Label>
-              <Input
-                id="foodType"
-                placeholder="e.g., Cooked"
-                value={formData.foodType}
-                onChange={(e) => setFormData({ ...formData, foodType: e.target.value })}
-                className="h-12 rounded-xl"
-                required
-              />
+          {/* Food Type Buttons */}
+          <div className="space-y-2">
+            <Label>Food Type</Label>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {foodTypes.map(({ value, label, icon: Icon }) => (
+                <Button
+                  key={value}
+                  type="button"
+                  variant={formData.foodType === value ? "default" : "outline"}
+                  onClick={() => setFormData({ ...formData, foodType: value })}
+                  className={cn(
+                    "h-20 flex-col gap-2 rounded-xl",
+                    formData.foodType === value && "shadow-[0_4px_16px_hsla(16,100%,66%,0.2)]"
+                  )}
+                >
+                  <Icon className="w-6 h-6" />
+                  <span className="text-xs">{label}</span>
+                </Button>
+              ))}
             </div>
+          </div>
 
+          {/* Urgency Level */}
+          <div className="space-y-2">
+            <Label>Urgency Level</Label>
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { value: "urgent", label: "Urgent", color: "destructive" },
+                { value: "normal", label: "Normal", color: "default" },
+                { value: "flexible", label: "Flexible", color: "secondary" },
+              ].map(({ value, label }) => (
+                <Button
+                  key={value}
+                  type="button"
+                  variant={formData.urgency === value ? "default" : "outline"}
+                  onClick={() => setFormData({ ...formData, urgency: value as any })}
+                  className="h-12 rounded-xl"
+                >
+                  {label}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="quantity">Quantity</Label>
               <Input
@@ -155,9 +213,7 @@ const CreateDonation = () => {
                 required
               />
             </div>
-          </div>
 
-          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="expiryDate">Expiry Date</Label>
               <Input
@@ -169,31 +225,13 @@ const CreateDonation = () => {
                 required
               />
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="pickupTime">Pickup Time</Label>
-              <Input
-                id="pickupTime"
-                type="time"
-                value={formData.pickupTime}
-                onChange={(e) => setFormData({ ...formData, pickupTime: e.target.value })}
-                className="h-12 rounded-xl"
-                required
-              />
-            </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="pickupAddress">Pickup Address</Label>
-            <Input
-              id="pickupAddress"
-              placeholder="Street address"
-              value={formData.pickupAddress}
-              onChange={(e) => setFormData({ ...formData, pickupAddress: e.target.value })}
-              className="h-12 rounded-xl"
-              required
-            />
-          </div>
+          {/* Location Picker */}
+          <LocationPicker
+            onLocationSelect={handleLocationSelect}
+            currentAddress={formData.pickupAddress}
+          />
 
           <div className="space-y-2">
             <Label htmlFor="pickupCity">City</Label>
@@ -202,6 +240,18 @@ const CreateDonation = () => {
               placeholder="City name"
               value={formData.pickupCity}
               onChange={(e) => setFormData({ ...formData, pickupCity: e.target.value })}
+              className="h-12 rounded-xl"
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="pickupTime">Pickup Time</Label>
+            <Input
+              id="pickupTime"
+              type="time"
+              value={formData.pickupTime}
+              onChange={(e) => setFormData({ ...formData, pickupTime: e.target.value })}
               className="h-12 rounded-xl"
               required
             />

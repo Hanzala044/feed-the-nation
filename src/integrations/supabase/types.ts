@@ -104,6 +104,8 @@ export type Database = {
           picked_up_at: string | null
           pickup_address: string
           pickup_city: string
+          pickup_latitude: number | null
+          pickup_longitude: number | null
           pickup_time: string
           quantity: string
           status: string
@@ -124,6 +126,8 @@ export type Database = {
           picked_up_at?: string | null
           pickup_address: string
           pickup_city: string
+          pickup_latitude?: number | null
+          pickup_longitude?: number | null
           pickup_time: string
           quantity: string
           status?: string
@@ -144,6 +148,8 @@ export type Database = {
           picked_up_at?: string | null
           pickup_address?: string
           pickup_city?: string
+          pickup_latitude?: number | null
+          pickup_longitude?: number | null
           pickup_time?: string
           quantity?: string
           status?: string
@@ -228,7 +234,9 @@ export type Database = {
           email: string
           full_name: string
           id: string
+          notification_enabled: boolean | null
           phone: string | null
+          push_subscription: Json | null
           role: string
           updated_at: string | null
         }
@@ -238,7 +246,9 @@ export type Database = {
           email: string
           full_name: string
           id: string
+          notification_enabled?: boolean | null
           phone?: string | null
+          push_subscription?: Json | null
           role: string
           updated_at?: string | null
         }
@@ -248,11 +258,51 @@ export type Database = {
           email?: string
           full_name?: string
           id?: string
+          notification_enabled?: boolean | null
           phone?: string | null
+          push_subscription?: Json | null
           role?: string
           updated_at?: string | null
         }
         Relationships: []
+      }
+      ratings: {
+        Row: {
+          created_at: string | null
+          donation_id: string
+          feedback: string | null
+          id: string
+          rated_by: string
+          rated_user: string
+          rating: number
+        }
+        Insert: {
+          created_at?: string | null
+          donation_id: string
+          feedback?: string | null
+          id?: string
+          rated_by: string
+          rated_user: string
+          rating: number
+        }
+        Update: {
+          created_at?: string | null
+          donation_id?: string
+          feedback?: string | null
+          id?: string
+          rated_by?: string
+          rated_user?: string
+          rating?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ratings_donation_id_fkey"
+            columns: ["donation_id"]
+            isOneToOne: false
+            referencedRelation: "donations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

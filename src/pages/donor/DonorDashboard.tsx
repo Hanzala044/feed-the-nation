@@ -4,9 +4,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, LogOut, Edit, Trash2, BarChart3 } from "lucide-react";
+import { useNotifications } from "@/hooks/useNotifications";
+import { Plus, LogOut, Edit, Trash2, BarChart3, Bell, Eye } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { SwipeableCard } from "@/components/SwipeableCard";
 import { AnalyticsDashboard } from "@/components/AnalyticsDashboard";
 import { Leaderboard } from "@/components/Leaderboard";
 import { DonationTimeline } from "@/components/DonationTimeline";
@@ -23,6 +26,7 @@ const DonorDashboard = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [donations, setDonations] = useState<Donation[]>([]);
   const [filteredDonations, setFilteredDonations] = useState<Donation[]>([]);
+  const [pastDonations, setPastDonations] = useState<Donation[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
     search: "",
@@ -31,6 +35,8 @@ const DonorDashboard = () => {
     urgency: "all",
     sortBy: "newest",
   });
+
+  const { notificationsEnabled, requestPermission } = useNotifications(profile?.id);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -61,8 +67,11 @@ const DonorDashboard = () => {
           .order("created_at", { ascending: false });
 
         if (donationsData) {
-          setDonations(donationsData);
-          setFilteredDonations(donationsData);
+          const active = donationsData.filter(d => d.status !== "delivered");
+          const past = donationsData.filter(d => d.status === "delivered");
+          setDonations(active);
+          setFilteredDonations(active);
+          setPastDonations(past);
         }
       } catch (error: any) {
         toast({
@@ -177,6 +186,63 @@ const DonorDashboard = () => {
     );
   }
 
+  const DonationCard = ({ donation }: { donation: Donation }) => (
+    <Card className="p-4">
+      <div className="flex justify-between items-start mb-3">
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-2">
+            <h3 className="font-semibold">{donation.title}</h3>
+            {donation.urgency === "urgent" && (
+              <Badge variant="destructive" className="text-xs rounded-full">Urgent</Badge>
+            )}
+          </div>
+          <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
+            {donation.description}
+          </p>
+          <div className="flex items-center gap-2 flex-wrap mb-3">
+            <Badge className="rounded-full">{donation.status}</Badge>
+            <span className="text-xs text-muted-foreground">{donation.food_type}</span>
+            <span className="text-xs text-muted-foreground">•</span>
+            <span className="text-xs text-muted-foreground">{donation.quantity}</span>
+          </div>
+        </div>
+        <div className="flex gap-2 ml-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate(`/donation/${donation.id}`)}
+            className="rounded-xl"
+          >
+            <Eye className="w-4 h-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate(`/donor/edit-donation/${donation.id}`)}
+            className="rounded-xl"
+          >
+            <Edit className="w-4 h-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => handleDelete(donation.id)}
+            className="rounded-xl text-destructive"
+          >
+            <Trash2 className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
+      
+      <DonationTimeline
+        status={donation.status}
+        createdAt={donation.created_at || ""}
+        pickedUpAt={donation.picked_up_at}
+        deliveredAt={donation.delivered_at}
+      />
+    </Card>
+  );
+
   return (
     <div className="min-h-screen bg-background pb-24">
       <div className="px-6 py-8 max-w-md mx-auto">
@@ -187,14 +253,27 @@ const DonorDashboard = () => {
             </h1>
             <p className="text-muted-foreground">Donor Dashboard</p>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleSignOut}
-            className="rounded-xl"
-          >
-            <LogOut className="w-5 h-5" />
-          </Button>
+          <div className="flex gap-2">
+            {!notificationsEnabled && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={requestPermission}
+                className="rounded-xl"
+              >
+                <Bell className="w-5 h-5" />
+              </Button>
+            )}
+            <ThemeToggle />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleSignOut}
+              className="rounded-xl"
+            >
+              <LogOut className="w-5 h-5" />
+            </Button>
+          </div>
         </div>
 
         <Button
@@ -206,72 +285,74 @@ const DonorDashboard = () => {
           Create New Donation
         </Button>
 
-        <Tabs defaultValue="donations" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 rounded-xl">
-            <TabsTrigger value="donations">Donations</TabsTrigger>
+        <Tabs defaultValue="active" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4 rounded-xl">
+            <TabsTrigger value="active">Active</TabsTrigger>
+            <TabsTrigger value="past">Past</TabsTrigger>
             <TabsTrigger value="analytics">
-              <BarChart3 className="w-4 h-4 mr-1" />
-              Stats
+              <BarChart3 className="w-4 h-4" />
             </TabsTrigger>
             <TabsTrigger value="community">Community</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="donations" className="space-y-4">
+          <TabsContent value="active" className="space-y-4">
             <DonationFilters filters={filters} onFiltersChange={setFilters} />
 
             {filteredDonations.length === 0 ? (
               <Card className="p-8 text-center">
                 <p className="text-muted-foreground">
-                  {donations.length === 0 ? "No donations yet" : "No donations match your filters"}
+                  {donations.length === 0 ? "No active donations" : "No donations match your filters"}
                 </p>
               </Card>
             ) : (
               filteredDonations.map((donation) => (
-                <Card key={donation.id} className="p-4">
+                <SwipeableCard
+                  key={donation.id}
+                  onSwipeLeft={() => handleDelete(donation.id)}
+                  disabled={donation.status !== "pending"}
+                >
+                  <DonationCard donation={donation} />
+                </SwipeableCard>
+              ))
+            )}
+          </TabsContent>
+
+          <TabsContent value="past" className="space-y-4">
+            {pastDonations.length === 0 ? (
+              <Card className="p-8 text-center">
+                <p className="text-muted-foreground">No past donations yet</p>
+              </Card>
+            ) : (
+              pastDonations.map((donation) => (
+                <Card key={donation.id} className="p-4 opacity-75">
                   <div className="flex justify-between items-start mb-3">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
                         <h3 className="font-semibold">{donation.title}</h3>
-                        {donation.urgency === "urgent" && (
-                          <Badge variant="destructive" className="text-xs">Urgent</Badge>
-                        )}
+                        <Badge variant="secondary" className="rounded-full">Completed</Badge>
                       </div>
                       <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
                         {donation.description}
                       </p>
-                      <div className="flex items-center gap-2 flex-wrap mb-3">
-                        <Badge>{donation.status}</Badge>
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-xs text-muted-foreground">{donation.food_type}</span>
                         <span className="text-xs text-muted-foreground">•</span>
                         <span className="text-xs text-muted-foreground">{donation.quantity}</span>
+                        <span className="text-xs text-muted-foreground">•</span>
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(donation.delivered_at || "").toLocaleDateString()}
+                        </span>
                       </div>
                     </div>
-                    <div className="flex gap-2 ml-4">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => navigate(`/donor/edit-donation/${donation.id}`)}
-                        className="rounded-xl"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDelete(donation.id)}
-                        className="rounded-xl text-destructive"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => navigate(`/donation/${donation.id}`)}
+                      className="rounded-xl"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </Button>
                   </div>
-                  
-                  <DonationTimeline
-                    status={donation.status}
-                    createdAt={donation.created_at || ""}
-                    pickedUpAt={donation.picked_up_at}
-                    deliveredAt={donation.delivered_at}
-                  />
                 </Card>
               ))
             )}

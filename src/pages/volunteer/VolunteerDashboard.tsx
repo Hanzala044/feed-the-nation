@@ -4,10 +4,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Package, LogOut, CheckCircle, BarChart3, MessageCircle } from "lucide-react";
+import { useNotifications } from "@/hooks/useNotifications";
+import { Package, LogOut, CheckCircle, BarChart3, MessageCircle, Bell, Eye, X, Check } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { SwipeableCard } from "@/components/SwipeableCard";
 import { AnalyticsDashboard } from "@/components/AnalyticsDashboard";
 import { Leaderboard } from "@/components/Leaderboard";
 import { DonationTimeline } from "@/components/DonationTimeline";
@@ -34,6 +37,8 @@ const VolunteerDashboard = () => {
     urgency: "all",
     sortBy: "newest",
   });
+
+  const { notificationsEnabled, requestPermission, sendNotification } = useNotifications(profile?.id);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -84,7 +89,24 @@ const VolunteerDashboard = () => {
       .on(
         "postgres_changes",
         {
-          event: "*",
+          event: "INSERT",
+          schema: "public",
+          table: "donations",
+        },
+        (payload) => {
+          if (payload.new && (payload.new as any).status === "pending") {
+            sendNotification(
+              "New Donation Available!",
+              `${(payload.new as any).title} is available for pickup`
+            );
+          }
+          fetchData();
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
           schema: "public",
           table: "donations",
         },
@@ -97,12 +119,11 @@ const VolunteerDashboard = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [navigate, toast]);
+  }, [navigate, toast, sendNotification]);
 
   useEffect(() => {
     let result = [...donations];
 
-    // Apply search filter
     if (filters.search) {
       result = result.filter(
         (d) =>
@@ -112,22 +133,18 @@ const VolunteerDashboard = () => {
       );
     }
 
-    // Apply food type filter
     if (filters.foodType !== "all") {
       result = result.filter((d) => d.food_type === filters.foodType);
     }
 
-    // Apply status filter
     if (filters.status !== "all") {
       result = result.filter((d) => d.status === filters.status);
     }
 
-    // Apply urgency filter
     if (filters.urgency !== "all") {
       result = result.filter((d) => d.urgency === filters.urgency);
     }
 
-    // Apply sorting
     switch (filters.sortBy) {
       case "newest":
         result.sort((a, b) => new Date(b.created_at || "").getTime() - new Date(a.created_at || "").getTime());
@@ -222,13 +239,15 @@ const VolunteerDashboard = () => {
 
   const pendingDonations = filteredDonations.filter(d => d.status === "pending");
   const myAcceptedDonations = filteredDonations.filter(
-    d => d.volunteer_id === profile?.id && d.status !== "pending"
+    d => d.volunteer_id === profile?.id && d.status !== "pending" && d.status !== "delivered"
+  );
+  const completedDonations = filteredDonations.filter(
+    d => d.volunteer_id === profile?.id && d.status === "delivered"
   );
 
   return (
     <div className="min-h-screen bg-background pb-24">
       <div className="px-6 py-8 max-w-md mx-auto">
-        {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-3xl font-bold">
@@ -236,28 +255,40 @@ const VolunteerDashboard = () => {
             </h1>
             <p className="text-muted-foreground">Volunteer Dashboard</p>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleSignOut}
-            className="rounded-xl"
-          >
-            <LogOut className="w-5 h-5" />
-          </Button>
+          <div className="flex gap-2">
+            {!notificationsEnabled && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={requestPermission}
+                className="rounded-xl"
+              >
+                <Bell className="w-5 h-5" />
+              </Button>
+            )}
+            <ThemeToggle />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleSignOut}
+              className="rounded-xl"
+            >
+              <LogOut className="w-5 h-5" />
+            </Button>
+          </div>
         </div>
 
-        {/* Tabs */}
         <Tabs defaultValue="available" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 rounded-xl">
+          <TabsList className="grid w-full grid-cols-5 rounded-xl text-xs">
             <TabsTrigger value="available">Available</TabsTrigger>
-            <TabsTrigger value="my-donations">My Tasks</TabsTrigger>
+            <TabsTrigger value="my-donations">Active</TabsTrigger>
+            <TabsTrigger value="completed">Past</TabsTrigger>
             <TabsTrigger value="analytics">
               <BarChart3 className="w-4 h-4" />
             </TabsTrigger>
             <TabsTrigger value="community">Community</TabsTrigger>
           </TabsList>
 
-          {/* Available Donations Tab */}
           <TabsContent value="available" className="space-y-4">
             <DonationFilters filters={filters} onFiltersChange={setFilters} />
             
@@ -272,99 +303,179 @@ const VolunteerDashboard = () => {
               </Card>
             ) : (
               pendingDonations.map((donation) => (
-                <Card key={donation.id} className="p-4">
-                  <div className="flex gap-4 mb-4">
-                    <div className="flex-shrink-0 w-16 h-16 rounded-xl bg-primary/20 flex items-center justify-center">
-                      <Package className="w-8 h-8 text-primary" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-semibold">{donation.title}</h3>
-                        {donation.urgency === "urgent" && (
-                          <Badge variant="destructive" className="text-xs">Urgent</Badge>
-                        )}
+                <SwipeableCard
+                  key={donation.id}
+                  onSwipeRight={() => handleAccept(donation.id)}
+                  rightAction={<Check className="w-6 h-6" />}
+                  leftAction={null}
+                >
+                  <Card className="p-4 bg-gradient-to-br from-card via-card to-accent/5">
+                    <div className="flex gap-4 mb-4">
+                      <div className="flex-shrink-0 w-16 h-16 rounded-xl bg-primary/20 flex items-center justify-center">
+                        <Package className="w-8 h-8 text-primary" />
                       </div>
-                      <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
-                        {donation.description}
-                      </p>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <span>{donation.food_type}</span>
-                        <span>•</span>
-                        <span>{donation.quantity}</span>
-                        <span>•</span>
-                        <span>{donation.pickup_city}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-semibold">{donation.title}</h3>
+                          {donation.urgency === "urgent" && (
+                            <Badge variant="destructive" className="text-xs rounded-full">Urgent</Badge>
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
+                          {donation.description}
+                        </p>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <span>{donation.food_type}</span>
+                          <span>•</span>
+                          <span>{donation.quantity}</span>
+                          <span>•</span>
+                          <span>{donation.pickup_city}</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <Button
-                    onClick={() => handleAccept(donation.id)}
-                    className="w-full rounded-xl"
-                  >
-                    <CheckCircle className="w-4 h-4 mr-2" />
-                    Accept Donation
-                  </Button>
-                </Card>
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => navigate(`/donation/${donation.id}`)}
+                        variant="outline"
+                        className="flex-1 rounded-xl"
+                      >
+                        <Eye className="w-4 h-4 mr-2" />
+                        View Details
+                      </Button>
+                      <Button
+                        onClick={() => handleAccept(donation.id)}
+                        className="flex-1 rounded-xl"
+                      >
+                        <CheckCircle className="w-4 h-4 mr-2" />
+                        Accept
+                      </Button>
+                    </div>
+                  </Card>
+                </SwipeableCard>
               ))
             )}
           </TabsContent>
 
-          {/* My Donations Tab */}
           <TabsContent value="my-donations" className="space-y-4">
             {myAcceptedDonations.length === 0 ? (
               <Card className="p-8 text-center">
                 <Package className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                <p className="text-muted-foreground">No accepted donations yet</p>
+                <p className="text-muted-foreground">No active donations</p>
               </Card>
             ) : (
               myAcceptedDonations.map((donation) => (
-                <Card key={donation.id} className="p-4">
-                  <div className="flex gap-4 mb-4">
-                    <div className="flex-shrink-0 w-16 h-16 rounded-xl bg-primary/20 flex items-center justify-center">
-                      <Package className="w-8 h-8 text-primary" />
+                <SwipeableCard
+                  key={donation.id}
+                  onSwipeRight={() => {
+                    if (donation.status === "accepted") {
+                      handleUpdateStatus(donation.id, "in_transit");
+                    } else if (donation.status === "in_transit") {
+                      handleUpdateStatus(donation.id, "delivered");
+                    }
+                  }}
+                  rightAction={<Check className="w-6 h-6" />}
+                  leftAction={null}
+                  disabled={donation.status === "delivered"}
+                >
+                  <Card className="p-4">
+                    <div className="flex gap-4 mb-4">
+                      <div className="flex-shrink-0 w-16 h-16 rounded-xl bg-primary/20 flex items-center justify-center">
+                        <Package className="w-8 h-8 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between mb-2">
+                          <h3 className="font-semibold">{donation.title}</h3>
+                          <Badge className="rounded-full">{donation.status.replace("_", " ")}</Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          {donation.pickup_address}, {donation.pickup_city}
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between mb-2">
+
+                    <DonationTimeline
+                      status={donation.status}
+                      createdAt={donation.created_at || ""}
+                      pickedUpAt={donation.picked_up_at}
+                      deliveredAt={donation.delivered_at}
+                    />
+
+                    <div className="flex gap-2 mt-4">
+                      {donation.status === "accepted" && (
+                        <Button
+                          onClick={() => handleUpdateStatus(donation.id, "in_transit")}
+                          variant="outline"
+                          className="flex-1 rounded-xl"
+                        >
+                          Mark as In Transit
+                        </Button>
+                      )}
+                      {donation.status === "in_transit" && (
+                        <Button
+                          onClick={() => handleUpdateStatus(donation.id, "delivered")}
+                          className="flex-1 rounded-xl"
+                        >
+                          Mark as Delivered
+                        </Button>
+                      )}
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => navigate(`/donation/${donation.id}`)}
+                        className="rounded-xl"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => setSelectedDonation(donation)}
+                        className="rounded-xl"
+                      >
+                        <MessageCircle className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </Card>
+                </SwipeableCard>
+              ))
+            )}
+          </TabsContent>
+
+          <TabsContent value="completed" className="space-y-4">
+            {completedDonations.length === 0 ? (
+              <Card className="p-8 text-center">
+                <Package className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                <p className="text-muted-foreground">No completed donations yet</p>
+              </Card>
+            ) : (
+              completedDonations.map((donation) => (
+                <Card key={donation.id} className="p-4 opacity-75">
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
                         <h3 className="font-semibold">{donation.title}</h3>
-                        <Badge>{donation.status}</Badge>
+                        <Badge variant="secondary" className="rounded-full">Completed</Badge>
                       </div>
                       <p className="text-sm text-muted-foreground mb-2">
                         {donation.pickup_address}, {donation.pickup_city}
                       </p>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-xs text-muted-foreground">{donation.food_type}</span>
+                        <span className="text-xs text-muted-foreground">•</span>
+                        <span className="text-xs text-muted-foreground">{donation.quantity}</span>
+                        <span className="text-xs text-muted-foreground">•</span>
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(donation.delivered_at || "").toLocaleDateString()}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-
-                  <DonationTimeline
-                    status={donation.status}
-                    createdAt={donation.created_at || ""}
-                    pickedUpAt={donation.picked_up_at}
-                    deliveredAt={donation.delivered_at}
-                  />
-
-                  <div className="flex gap-2 mt-4">
-                    {donation.status === "accepted" && (
-                      <Button
-                        onClick={() => handleUpdateStatus(donation.id, "in_transit")}
-                        variant="outline"
-                        className="flex-1 rounded-xl"
-                      >
-                        Mark as In Transit
-                      </Button>
-                    )}
-                    {donation.status === "in_transit" && (
-                      <Button
-                        onClick={() => handleUpdateStatus(donation.id, "delivered")}
-                        className="flex-1 rounded-xl"
-                      >
-                        Mark as Delivered
-                      </Button>
-                    )}
                     <Button
-                      variant="outline"
+                      variant="ghost"
                       size="icon"
-                      onClick={() => setSelectedDonation(donation)}
+                      onClick={() => navigate(`/donation/${donation.id}`)}
                       className="rounded-xl"
                     >
-                      <MessageCircle className="w-4 h-4" />
+                      <Eye className="w-4 h-4" />
                     </Button>
                   </div>
                 </Card>
@@ -372,20 +483,17 @@ const VolunteerDashboard = () => {
             )}
           </TabsContent>
 
-          {/* Analytics Tab */}
           <TabsContent value="analytics" className="space-y-6">
             <AnalyticsDashboard userId={profile?.id || ""} role="volunteer" />
             <AchievementBadges userId={profile?.id || ""} />
           </TabsContent>
 
-          {/* Community Tab */}
           <TabsContent value="community" className="space-y-6">
             <Leaderboard type="volunteer" />
             <Leaderboard type="donor" />
           </TabsContent>
         </Tabs>
 
-        {/* Messaging Dialog */}
         <Dialog open={!!selectedDonation} onOpenChange={() => setSelectedDonation(null)}>
           <DialogContent className="max-w-md">
             <DialogHeader>
