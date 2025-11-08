@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from "@/hooks/useNotifications";
-import { Package, LogOut, CheckCircle, BarChart3, MessageCircle, Bell, Eye, X, Check } from "lucide-react";
+import { Package, LogOut, CheckCircle, BarChart3, MessageCircle, Bell, Eye, X, Check, Upload } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -17,7 +17,9 @@ import { DonationTimeline } from "@/components/DonationTimeline";
 import { DonationMessaging } from "@/components/DonationMessaging";
 import { DonationFilters } from "@/components/DonationFilters";
 import { AchievementBadges } from "@/components/AchievementBadges";
+import { DeliveryProofUpload } from "@/components/DeliveryProofUpload";
 import type { Database } from "@/integrations/supabase/types";
+import logo from "@/assets/logo.png";
 
 type Donation = Database["public"]["Tables"]["donations"]["Row"];
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
@@ -30,6 +32,7 @@ const VolunteerDashboard = () => {
   const [filteredDonations, setFilteredDonations] = useState<Donation[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedDonation, setSelectedDonation] = useState<Donation | null>(null);
+  const [uploadProofDonation, setUploadProofDonation] = useState<Donation | null>(null);
   const [filters, setFilters] = useState({
     search: "",
     foodType: "all",
@@ -246,37 +249,41 @@ const VolunteerDashboard = () => {
   );
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className="min-h-screen bg-gradient-to-br from-background via-cream/10 to-background pb-24">
       <div className="px-6 py-8 max-w-md mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-3xl font-bold">
-              Welcome, {profile?.full_name?.split(" ")[0]}!
-            </h1>
-            <p className="text-muted-foreground">Volunteer Dashboard</p>
-          </div>
-          <div className="flex gap-2">
-            {!notificationsEnabled && (
+        {/* Modern Header with Logo */}
+        <Card className="p-6 mb-6 bg-gradient-glass backdrop-blur-xl border-2 border-glassBorder shadow-glass">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <img src={logo} alt="Logo" className="w-14 h-14 rounded-2xl" />
+              <div>
+                <h1 className="text-2xl font-bold">
+                  Hey, {profile?.full_name?.split(" ")[0]}! 🚀
+                </h1>
+                <p className="text-sm text-muted-foreground">Volunteer dashboard</p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              {!notificationsEnabled && (
+                <Button
+                  variant="glass"
+                  size="icon"
+                  onClick={requestPermission}
+                >
+                  <Bell className="w-5 h-5" />
+                </Button>
+              )}
+              <ThemeToggle />
               <Button
-                variant="ghost"
+                variant="glass"
                 size="icon"
-                onClick={requestPermission}
-                className="rounded-xl"
+                onClick={handleSignOut}
               >
-                <Bell className="w-5 h-5" />
+                <LogOut className="w-5 h-5" />
               </Button>
-            )}
-            <ThemeToggle />
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleSignOut}
-              className="rounded-xl"
-            >
-              <LogOut className="w-5 h-5" />
-            </Button>
+            </div>
           </div>
-        </div>
+        </Card>
 
         <Tabs defaultValue="available" className="space-y-6">
           <TabsList className="grid w-full grid-cols-5 rounded-xl text-xs">
@@ -309,9 +316,9 @@ const VolunteerDashboard = () => {
                   rightAction={<Check className="w-6 h-6" />}
                   leftAction={null}
                 >
-                  <Card className="p-4 bg-gradient-to-br from-card via-card to-accent/5">
+                  <Card className="p-5 bg-gradient-card backdrop-blur-xl border-2 border-glassBorder shadow-soft hover:shadow-glass transition-all duration-300">
                     <div className="flex gap-4 mb-4">
-                      <div className="flex-shrink-0 w-16 h-16 rounded-xl bg-primary/20 flex items-center justify-center">
+                      <div className="flex-shrink-0 w-16 h-16 rounded-2xl bg-primary/20 flex items-center justify-center">
                         <Package className="w-8 h-8 text-primary" />
                       </div>
                       <div className="flex-1 min-w-0">
@@ -377,9 +384,9 @@ const VolunteerDashboard = () => {
                   leftAction={null}
                   disabled={donation.status === "delivered"}
                 >
-                  <Card className="p-4">
+                  <Card className="p-5 bg-gradient-card backdrop-blur-xl border-2 border-glassBorder shadow-soft">
                     <div className="flex gap-4 mb-4">
-                      <div className="flex-shrink-0 w-16 h-16 rounded-xl bg-primary/20 flex items-center justify-center">
+                      <div className="flex-shrink-0 w-16 h-16 rounded-2xl bg-primary/20 flex items-center justify-center">
                         <Package className="w-8 h-8 text-primary" />
                       </div>
                       <div className="flex-1 min-w-0">
@@ -405,24 +412,33 @@ const VolunteerDashboard = () => {
                         <Button
                           onClick={() => handleUpdateStatus(donation.id, "in_transit")}
                           variant="outline"
-                          className="flex-1 rounded-xl"
+                          className="flex-1"
                         >
                           Mark as In Transit
                         </Button>
                       )}
                       {donation.status === "in_transit" && (
-                        <Button
-                          onClick={() => handleUpdateStatus(donation.id, "delivered")}
-                          className="flex-1 rounded-xl"
-                        >
-                          Mark as Delivered
-                        </Button>
+                        <>
+                          <Button
+                            onClick={() => setUploadProofDonation(donation)}
+                            variant="outline"
+                            className="flex-1"
+                          >
+                            <Upload className="w-4 h-4 mr-2" />
+                            Upload Photo
+                          </Button>
+                          <Button
+                            onClick={() => handleUpdateStatus(donation.id, "delivered")}
+                            className="flex-1"
+                          >
+                            Complete
+                          </Button>
+                        </>
                       )}
                       <Button
                         variant="outline"
                         size="icon"
                         onClick={() => navigate(`/donation/${donation.id}`)}
-                        className="rounded-xl"
                       >
                         <Eye className="w-4 h-4" />
                       </Button>
@@ -430,7 +446,6 @@ const VolunteerDashboard = () => {
                         variant="outline"
                         size="icon"
                         onClick={() => setSelectedDonation(donation)}
-                        className="rounded-xl"
                       >
                         <MessageCircle className="w-4 h-4" />
                       </Button>
@@ -495,7 +510,7 @@ const VolunteerDashboard = () => {
         </Tabs>
 
         <Dialog open={!!selectedDonation} onOpenChange={() => setSelectedDonation(null)}>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-md bg-gradient-card backdrop-blur-xl border-2 border-glassBorder">
             <DialogHeader>
               <DialogTitle>Message Donor</DialogTitle>
             </DialogHeader>
@@ -505,6 +520,27 @@ const VolunteerDashboard = () => {
                 currentUserId={profile?.id || ""}
                 otherUserId={selectedDonation.donor_id}
                 otherUserName="Donor"
+              />
+            )}
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={!!uploadProofDonation} onOpenChange={() => setUploadProofDonation(null)}>
+          <DialogContent className="max-w-md bg-gradient-card backdrop-blur-xl border-2 border-glassBorder">
+            <DialogHeader>
+              <DialogTitle>Upload Delivery Proof</DialogTitle>
+            </DialogHeader>
+            {uploadProofDonation && (
+              <DeliveryProofUpload
+                donationId={uploadProofDonation.id}
+                userId={profile?.id || ""}
+                onSuccess={() => {
+                  setUploadProofDonation(null);
+                  toast({
+                    title: "Success!",
+                    description: "Delivery proof uploaded successfully",
+                  });
+                }}
               />
             )}
           </DialogContent>
