@@ -4,8 +4,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Package, TrendingUp, Users, LogOut, Edit, Trash2 } from "lucide-react";
+import { Plus, LogOut, Edit, Trash2, BarChart3 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AnalyticsDashboard } from "@/components/AnalyticsDashboard";
+import { Leaderboard } from "@/components/Leaderboard";
+import { DonationTimeline } from "@/components/DonationTimeline";
+import { DonationFilters } from "@/components/DonationFilters";
+import { AchievementBadges } from "@/components/AchievementBadges";
 import type { Database } from "@/integrations/supabase/types";
 
 type Donation = Database["public"]["Tables"]["donations"]["Row"];
@@ -16,11 +22,14 @@ const DonorDashboard = () => {
   const { toast } = useToast();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [donations, setDonations] = useState<Donation[]>([]);
+  const [filteredDonations, setFilteredDonations] = useState<Donation[]>([]);
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({
-    total: 0,
-    delivered: 0,
-    pending: 0,
+  const [filters, setFilters] = useState({
+    search: "",
+    foodType: "all",
+    status: "all",
+    urgency: "all",
+    sortBy: "newest",
   });
 
   useEffect(() => {
@@ -53,11 +62,7 @@ const DonorDashboard = () => {
 
         if (donationsData) {
           setDonations(donationsData);
-          setStats({
-            total: donationsData.length,
-            delivered: donationsData.filter((d) => d.status === "delivered").length,
-            pending: donationsData.filter((d) => d.status === "pending").length,
-          });
+          setFilteredDonations(donationsData);
         }
       } catch (error: any) {
         toast({
@@ -91,6 +96,48 @@ const DonorDashboard = () => {
       supabase.removeChannel(channel);
     };
   }, [navigate, toast]);
+
+  useEffect(() => {
+    let result = [...donations];
+
+    if (filters.search) {
+      result = result.filter(
+        (d) =>
+          d.title.toLowerCase().includes(filters.search.toLowerCase()) ||
+          d.description.toLowerCase().includes(filters.search.toLowerCase()) ||
+          d.pickup_city.toLowerCase().includes(filters.search.toLowerCase())
+      );
+    }
+
+    if (filters.foodType !== "all") {
+      result = result.filter((d) => d.food_type === filters.foodType);
+    }
+
+    if (filters.status !== "all") {
+      result = result.filter((d) => d.status === filters.status);
+    }
+
+    if (filters.urgency !== "all") {
+      result = result.filter((d) => d.urgency === filters.urgency);
+    }
+
+    switch (filters.sortBy) {
+      case "newest":
+        result.sort((a, b) => new Date(b.created_at || "").getTime() - new Date(a.created_at || "").getTime());
+        break;
+      case "oldest":
+        result.sort((a, b) => new Date(a.created_at || "").getTime() - new Date(b.created_at || "").getTime());
+        break;
+      case "expiry":
+        result.sort((a, b) => new Date(a.expiry_date).getTime() - new Date(b.expiry_date).getTime());
+        break;
+      case "quantity":
+        result.sort((a, b) => parseInt(b.quantity) - parseInt(a.quantity));
+        break;
+    }
+
+    setFilteredDonations(result);
+  }, [donations, filters]);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -133,8 +180,7 @@ const DonorDashboard = () => {
   return (
     <div className="min-h-screen bg-background pb-24">
       <div className="px-6 py-8 max-w-md mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-3xl font-bold">
               Welcome, {profile?.full_name?.split(" ")[0]}!
@@ -151,122 +197,99 @@ const DonorDashboard = () => {
           </Button>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-3 mb-8">
-          <StatCard icon={<Package />} value={stats.total} label="Total" />
-          <StatCard icon={<TrendingUp />} value={stats.delivered} label="Delivered" />
-          <StatCard icon={<Users />} value={stats.pending} label="Pending" />
-        </div>
-
-        {/* Quick Actions */}
         <Button
           onClick={() => navigate("/donor/create-donation")}
-          className="w-full h-14 rounded-2xl text-base font-semibold mb-8 shadow-[0_8px_32px_hsla(16,100%,66%,0.25)]"
+          className="w-full rounded-xl mb-6"
+          size="lg"
         >
           <Plus className="w-5 h-5 mr-2" />
           Create New Donation
         </Button>
 
-        {/* Donations List */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">My Donations</h2>
-            <span className="text-sm text-muted-foreground">{donations.length} items</span>
-          </div>
+        <Tabs defaultValue="donations" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3 rounded-xl">
+            <TabsTrigger value="donations">Donations</TabsTrigger>
+            <TabsTrigger value="analytics">
+              <BarChart3 className="w-4 h-4 mr-1" />
+              Stats
+            </TabsTrigger>
+            <TabsTrigger value="community">Community</TabsTrigger>
+          </TabsList>
 
-          {donations.length === 0 ? (
-            <Card className="p-8 text-center">
-              <Package className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-              <p className="text-muted-foreground">No donations yet</p>
-              <p className="text-sm text-muted-foreground mt-2">
-                Start making a difference by creating your first donation
-              </p>
-            </Card>
-          ) : (
-            donations.map((donation) => (
-              <Card
-                key={donation.id}
-                className="p-4 cursor-pointer hover:border-primary/50 transition-all"
-              >
-                <div className="flex gap-4">
-                  <div className="flex-shrink-0 w-16 h-16 rounded-xl bg-primary/20 flex items-center justify-center">
-                    <Package className="w-8 h-8 text-primary" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between mb-2">
-                      <h3 className="font-semibold truncate">{donation.title}</h3>
-                      <Badge variant={getStatusVariant(donation.status)}>
-                        {donation.status}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
-                      {donation.description}
-                    </p>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <span>{donation.quantity}</span>
-                      <span>•</span>
-                      <span>{donation.pickup_city}</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex gap-2 mt-4">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => navigate(`/donor/edit-donation/${donation.id}`)}
-                    className="flex-1 rounded-xl"
-                  >
-                    <Edit className="w-4 h-4 mr-2" />
-                    Edit
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleDelete(donation.id)}
-                    className="flex-1 rounded-xl border-destructive/50 text-destructive hover:bg-destructive/10"
-                  >
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Delete
-                  </Button>
-                </div>
+          <TabsContent value="donations" className="space-y-4">
+            <DonationFilters filters={filters} onFiltersChange={setFilters} />
+
+            {filteredDonations.length === 0 ? (
+              <Card className="p-8 text-center">
+                <p className="text-muted-foreground">
+                  {donations.length === 0 ? "No donations yet" : "No donations match your filters"}
+                </p>
               </Card>
-            ))
-          )}
-        </div>
+            ) : (
+              filteredDonations.map((donation) => (
+                <Card key={donation.id} className="p-4">
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <h3 className="font-semibold">{donation.title}</h3>
+                        {donation.urgency === "urgent" && (
+                          <Badge variant="destructive" className="text-xs">Urgent</Badge>
+                        )}
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
+                        {donation.description}
+                      </p>
+                      <div className="flex items-center gap-2 flex-wrap mb-3">
+                        <Badge>{donation.status}</Badge>
+                        <span className="text-xs text-muted-foreground">{donation.food_type}</span>
+                        <span className="text-xs text-muted-foreground">•</span>
+                        <span className="text-xs text-muted-foreground">{donation.quantity}</span>
+                      </div>
+                    </div>
+                    <div className="flex gap-2 ml-4">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => navigate(`/donor/edit-donation/${donation.id}`)}
+                        className="rounded-xl"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDelete(donation.id)}
+                        className="rounded-xl text-destructive"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <DonationTimeline
+                    status={donation.status}
+                    createdAt={donation.created_at || ""}
+                    pickedUpAt={donation.picked_up_at}
+                    deliveredAt={donation.delivered_at}
+                  />
+                </Card>
+              ))
+            )}
+          </TabsContent>
+
+          <TabsContent value="analytics" className="space-y-6">
+            <AnalyticsDashboard userId={profile?.id || ""} role="donor" />
+            <AchievementBadges userId={profile?.id || ""} />
+          </TabsContent>
+
+          <TabsContent value="community" className="space-y-6">
+            <Leaderboard type="donor" />
+            <Leaderboard type="volunteer" />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
-};
-
-const StatCard = ({
-  icon,
-  value,
-  label,
-}: {
-  icon: React.ReactNode;
-  value: number;
-  label: string;
-}) => (
-  <Card className="p-4 text-center">
-    <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary mx-auto mb-2">
-      {icon}
-    </div>
-    <div className="text-2xl font-bold text-primary mb-1">{value}</div>
-    <div className="text-xs text-muted-foreground">{label}</div>
-  </Card>
-);
-
-const getStatusVariant = (status: string) => {
-  switch (status) {
-    case "delivered":
-      return "default";
-    case "in_transit":
-      return "secondary";
-    case "accepted":
-      return "outline";
-    default:
-      return "outline";
-  }
 };
 
 export default DonorDashboard;

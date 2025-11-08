@@ -14,15 +14,94 @@ export type Database = {
   }
   public: {
     Tables: {
+      achievements: {
+        Row: {
+          achievement_name: string
+          achievement_type: string
+          earned_at: string | null
+          id: string
+          metadata: Json | null
+          user_id: string
+        }
+        Insert: {
+          achievement_name: string
+          achievement_type: string
+          earned_at?: string | null
+          id?: string
+          metadata?: Json | null
+          user_id: string
+        }
+        Update: {
+          achievement_name?: string
+          achievement_type?: string
+          earned_at?: string | null
+          id?: string
+          metadata?: Json | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "achievements_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      delivery_proofs: {
+        Row: {
+          created_at: string | null
+          donation_id: string
+          id: string
+          image_url: string
+          proof_type: string
+          uploaded_by: string
+        }
+        Insert: {
+          created_at?: string | null
+          donation_id: string
+          id?: string
+          image_url: string
+          proof_type: string
+          uploaded_by: string
+        }
+        Update: {
+          created_at?: string | null
+          donation_id?: string
+          id?: string
+          image_url?: string
+          proof_type?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delivery_proofs_donation_id_fkey"
+            columns: ["donation_id"]
+            isOneToOne: false
+            referencedRelation: "donations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "delivery_proofs_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       donations: {
         Row: {
           created_at: string | null
+          delivered_at: string | null
           description: string
           donor_id: string
           expiry_date: string
           food_type: string
           id: string
           image_url: string | null
+          picked_up_at: string | null
           pickup_address: string
           pickup_city: string
           pickup_time: string
@@ -30,16 +109,19 @@ export type Database = {
           status: string
           title: string
           updated_at: string | null
+          urgency: string | null
           volunteer_id: string | null
         }
         Insert: {
           created_at?: string | null
+          delivered_at?: string | null
           description: string
           donor_id: string
           expiry_date: string
           food_type: string
           id?: string
           image_url?: string | null
+          picked_up_at?: string | null
           pickup_address: string
           pickup_city: string
           pickup_time: string
@@ -47,16 +129,19 @@ export type Database = {
           status?: string
           title: string
           updated_at?: string | null
+          urgency?: string | null
           volunteer_id?: string | null
         }
         Update: {
           created_at?: string | null
+          delivered_at?: string | null
           description?: string
           donor_id?: string
           expiry_date?: string
           food_type?: string
           id?: string
           image_url?: string | null
+          picked_up_at?: string | null
           pickup_address?: string
           pickup_city?: string
           pickup_time?: string
@@ -64,6 +149,7 @@ export type Database = {
           status?: string
           title?: string
           updated_at?: string | null
+          urgency?: string | null
           volunteer_id?: string | null
         }
         Relationships: [
@@ -77,6 +163,58 @@ export type Database = {
           {
             foreignKeyName: "donations_volunteer_id_fkey"
             columns: ["volunteer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          created_at: string | null
+          donation_id: string
+          id: string
+          is_read: boolean | null
+          message: string
+          receiver_id: string
+          sender_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          donation_id: string
+          id?: string
+          is_read?: boolean | null
+          message: string
+          receiver_id: string
+          sender_id: string
+        }
+        Update: {
+          created_at?: string | null
+          donation_id?: string
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          receiver_id?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_donation_id_fkey"
+            columns: ["donation_id"]
+            isOneToOne: false
+            referencedRelation: "donations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_receiver_id_fkey"
+            columns: ["receiver_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_sender_id_fkey"
+            columns: ["sender_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
