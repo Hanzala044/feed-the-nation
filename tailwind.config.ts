@@ -60,6 +60,22 @@ export default {
           foreground: "hsl(var(--info-foreground))",
         },
         coralGlow: "hsl(var(--coral-glow))",
+        cream: "hsl(var(--cream))",
+        glassBg: "var(--glass-bg)",
+        glassBorder: "var(--glass-border)",
+      },
+      backgroundImage: {
+        'gradient-hero': 'var(--gradient-hero)',
+        'gradient-card': 'var(--gradient-card)',
+        'gradient-glass': 'var(--gradient-glass)',
+      },
+      boxShadow: {
+        'glow': 'var(--shadow-glow)',
+        'soft': 'var(--shadow-soft)',
+        'glass': 'var(--shadow-card)',
+      },
+      backdropBlur: {
+        'glass': 'var(--blur-glass)',
       },
       borderRadius: {
         lg: "var(--radius)",

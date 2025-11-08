@@ -5,8 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Heart } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import { z } from "zod";
+import logo from "@/assets/logo.png";
 
 const authSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -23,6 +24,7 @@ const Auth = () => {
   );
   const [role, setRole] = useState<"donor" | "volunteer">("donor");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -122,121 +124,156 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="px-6 py-8 max-w-md mx-auto">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => navigate("/")}
-          className="mb-6 rounded-xl"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </Button>
+    <div className="min-h-screen bg-[hsl(35,15%,20%)] dark:bg-[hsl(30,18%,9%)] relative overflow-hidden">
+      {/* Topographic Background Pattern */}
+      <div className="absolute inset-0 opacity-40">
+        <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <pattern id="topo" x="0" y="0" width="100" height="100" patternUnits="userSpaceOnUse">
+              <path d="M10 50 Q 25 45, 50 50 T 90 50" stroke="currentColor" strokeWidth="0.5" fill="none" className="text-primary/30"/>
+              <path d="M10 30 Q 25 25, 50 30 T 90 30" stroke="currentColor" strokeWidth="0.5" fill="none" className="text-primary/20"/>
+              <path d="M10 70 Q 25 65, 50 70 T 90 70" stroke="currentColor" strokeWidth="0.5" fill="none" className="text-primary/20"/>
+              <circle cx="30" cy="50" r="1.5" fill="currentColor" className="text-primary/40"/>
+              <circle cx="70" cy="50" r="1.5" fill="currentColor" className="text-primary/40"/>
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#topo)" />
+        </svg>
+      </div>
 
+      <div className="relative px-6 py-12 max-w-md mx-auto">
+        {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/20 mb-4">
-            <Heart className="w-8 h-8 text-primary" fill="currentColor" />
+          <div className="inline-flex items-center justify-center w-20 h-20 mb-4">
+            <img src={logo} alt="Field Setup Logo" className="w-full h-full object-contain rounded-2xl" />
           </div>
-          <h1 className="text-3xl font-bold mb-2">
-            {mode === "login" ? "Welcome Back" : "Join Us"}
+          <h1 className="text-4xl font-bold text-white mb-2">
+            {mode === "login" ? "Sign In" : "Sign Up"}
           </h1>
-          <p className="text-muted-foreground">
-            {mode === "login"
-              ? "Sign in to continue making a difference"
-              : "Create an account to start helping"}
-          </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          {mode === "signup" && (
-            <>
-              <div className="space-y-2">
-                <Label htmlFor="fullName">Full Name</Label>
+        {/* Glassmorphic Form Card */}
+        <div className="backdrop-blur-xl bg-white/10 dark:bg-white/5 border border-white/20 rounded-3xl p-6 shadow-glass">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {mode === "signup" && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="fullName" className="text-white/90">Full Name</Label>
+                  <Input
+                    id="fullName"
+                    type="text"
+                    placeholder="John Doe"
+                    value={formData.fullName}
+                    onChange={(e) =>
+                      setFormData({ ...formData, fullName: e.target.value })
+                    }
+                    className="h-14 rounded-2xl bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:bg-white/20 transition-all"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-white/90">I want to be a</Label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <Button
+                      type="button"
+                      onClick={() => setRole("donor")}
+                      variant={role === "donor" ? "default" : "outline"}
+                      className={`h-14 rounded-2xl text-base font-semibold transition-all ${
+                        role === "donor" 
+                          ? "bg-primary text-white shadow-glow" 
+                          : "bg-white/10 border-white/20 text-white hover:bg-white/20"
+                      }`}
+                    >
+                      Donor
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={() => setRole("volunteer")}
+                      variant={role === "volunteer" ? "default" : "outline"}
+                      className={`h-14 rounded-2xl text-base font-semibold transition-all ${
+                        role === "volunteer" 
+                          ? "bg-primary text-white shadow-glow" 
+                          : "bg-white/10 border-white/20 text-white hover:bg-white/20"
+                      }`}
+                    >
+                      Volunteer
+                    </Button>
+                  </div>
+                </div>
+              </>
+            )}
+
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-white/90">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="name@example.com"
+                value={formData.email}
+                onChange={(e) =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
+                className="h-14 rounded-2xl bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:bg-white/20 transition-all"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-white/90">Password</Label>
+              <div className="relative">
                 <Input
-                  id="fullName"
-                  type="text"
-                  placeholder="John Doe"
-                  value={formData.fullName}
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  value={formData.password}
                   onChange={(e) =>
-                    setFormData({ ...formData, fullName: e.target.value })
+                    setFormData({ ...formData, password: e.target.value })
                   }
-                  className="h-12 rounded-xl"
+                  className="h-14 rounded-2xl bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:bg-white/20 transition-all pr-12"
                   required
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-white/60 hover:text-white/90 transition-colors"
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
               </div>
+            </div>
 
-              <div className="space-y-2">
-                <Label>I want to be a</Label>
-                <div className="grid grid-cols-2 gap-3">
-                  <Button
-                    type="button"
-                    onClick={() => setRole("donor")}
-                    variant={role === "donor" ? "default" : "outline"}
-                    className="h-12 rounded-xl"
-                  >
-                    Donor
-                  </Button>
-                  <Button
-                    type="button"
-                    onClick={() => setRole("volunteer")}
-                    variant={role === "volunteer" ? "default" : "outline"}
-                    className="h-12 rounded-xl"
-                  >
-                    Volunteer
-                  </Button>
-                </div>
+            {mode === "login" && (
+              <div className="flex items-center">
+                <button
+                  type="button"
+                  className="text-sm text-white/70 hover:text-white transition-colors"
+                >
+                  Forgot password?
+                </button>
               </div>
-            </>
-          )}
+            )}
 
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="name@example.com"
-              value={formData.email}
-              onChange={(e) =>
-                setFormData({ ...formData, email: e.target.value })
-              }
-              className="h-12 rounded-xl"
-              required
-            />
+            <Button
+              type="submit"
+              disabled={loading}
+              className="w-full h-14 rounded-2xl text-base font-bold bg-primary hover:bg-primary/90 text-white shadow-glow"
+            >
+              {loading ? "Loading..." : mode === "login" ? "Sign In" : "Sign Up"}
+            </Button>
+          </form>
+
+          <div className="mt-6 text-center">
+            <p className="text-sm text-white/70">
+              {mode === "login" ? "Don't have an account?" : "Already have an account?"}{" "}
+              <button
+                onClick={() => setMode(mode === "login" ? "signup" : "login")}
+                className="text-white font-semibold hover:underline"
+              >
+                {mode === "login" ? "Sign Up" : "Sign In"}
+              </button>
+            </p>
           </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="••••••••"
-              value={formData.password}
-              onChange={(e) =>
-                setFormData({ ...formData, password: e.target.value })
-              }
-              className="h-12 rounded-xl"
-              required
-            />
-          </div>
-
-          <Button
-            type="submit"
-            disabled={loading}
-            className="w-full h-12 rounded-xl text-base font-semibold shadow-[0_8px_32px_hsla(16,100%,66%,0.25)]"
-          >
-            {loading ? "Loading..." : mode === "login" ? "Sign In" : "Create Account"}
-          </Button>
-        </form>
-
-        <div className="mt-6 text-center">
-          <button
-            onClick={() => setMode(mode === "login" ? "signup" : "login")}
-            className="text-sm text-muted-foreground hover:text-primary transition-colors"
-          >
-            {mode === "login"
-              ? "Don't have an account? Sign up"
-              : "Already have an account? Sign in"}
-          </button>
         </div>
       </div>
     </div>
