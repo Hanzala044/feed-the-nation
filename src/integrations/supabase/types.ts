@@ -333,20 +333,21 @@ export type Database = {
       }
     }
     Views: {
-      donation_analytics: {
-        Row: {
-          area: string | null
-          completed_donations: number | null
-          in_transit_donations: number | null
-          pending_donations: number | null
-          total_donations: number | null
-          unique_donors: number | null
-          unique_volunteers: number | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
+      get_donation_analytics: {
+        Args: never
+        Returns: {
+          area: string
+          completed_donations: number
+          in_transit_donations: number
+          pending_donations: number
+          total_donations: number
+          unique_donors: number
+          unique_volunteers: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
