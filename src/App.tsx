@@ -11,6 +11,9 @@ import CreateDonation from "./pages/donor/CreateDonation";
 import EditDonation from "./pages/donor/EditDonation";
 import VolunteerDashboard from "./pages/volunteer/VolunteerDashboard";
 import DonationDetail from "./pages/DonationDetail";
+import Profile from "./pages/Profile";
+import PublicFeed from "./pages/PublicFeed";
+import AdminDashboard from "./pages/admin/AdminDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +33,9 @@ const App = () => (
           <Route path="/donor/edit-donation/:id" element={<EditDonation />} />
           <Route path="/volunteer/dashboard" element={<VolunteerDashboard />} />
           <Route path="/donation/:id" element={<DonationDetail />} />
+          <Route path="/profile/:userId?" element={<Profile />} />
+          <Route path="/feed" element={<PublicFeed />} />
+          <Route path="/admin" element={<AdminDashboard />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

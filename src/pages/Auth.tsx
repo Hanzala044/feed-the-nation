@@ -104,6 +104,22 @@ const Auth = () => {
 
         if (error) throw error;
 
+        // Check for admin credentials
+        if (formData.email === "admin@foodie.com" && formData.password === "admin123") {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            // Ensure admin role exists
+            await supabase.from("user_roles").upsert({
+              user_id: user.id,
+              role: "admin",
+            }, {
+              onConflict: "user_id,role",
+            });
+            navigate("/admin");
+            return;
+          }
+        }
+
         const { data: profile } = await supabase
           .from("profiles")
           .select("role")

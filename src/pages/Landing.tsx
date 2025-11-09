@@ -40,9 +40,17 @@ const Landing = () => {
               Get Started Free
             </Button>
             <Button
-              onClick={() => navigate("/auth?mode=login")}
+              onClick={() => navigate("/feed")}
               variant="glass"
               className="w-full h-16 text-lg font-semibold"
+              size="lg"
+            >
+              View Available Donations
+            </Button>
+            <Button
+              onClick={() => navigate("/auth?mode=login")}
+              variant="outline"
+              className="w-full h-16 text-lg font-semibold border-2"
               size="lg"
             >
               Sign In

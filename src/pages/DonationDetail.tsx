@@ -15,6 +15,7 @@ import type { Database } from "@/integrations/supabase/types";
 type Donation = Database["public"]["Tables"]["donations"]["Row"];
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 type Rating = Database["public"]["Tables"]["ratings"]["Row"];
+type DeliveryProof = Database["public"]["Tables"]["delivery_proofs"]["Row"];
 
 const DonationDetail = () => {
   const { id } = useParams();
@@ -25,6 +26,7 @@ const DonationDetail = () => {
   const [volunteerProfile, setVolunteerProfile] = useState<Profile | null>(null);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [ratings, setRatings] = useState<Rating[]>([]);
+  const [deliveryProofs, setDeliveryProofs] = useState<DeliveryProof[]>([]);
   const [showRating, setShowRating] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -71,6 +73,12 @@ const DonationDetail = () => {
           .select("*")
           .eq("donation_id", id);
         if (ratingsData) setRatings(ratingsData);
+
+        const { data: proofsData } = await supabase
+          .from("delivery_proofs")
+          .select("*")
+          .eq("donation_id", id);
+        if (proofsData) setDeliveryProofs(proofsData);
       }
     } catch (error: any) {
       toast({
@@ -214,6 +222,29 @@ const DonationDetail = () => {
                 )}
               </div>
             </Card>
+
+            {deliveryProofs.length > 0 && (
+              <Card className="p-6">
+                <h3 className="font-semibold mb-3">Delivery Photos</h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {deliveryProofs.map((proof) => (
+                    <div key={proof.id} className="relative group">
+                      <img
+                        src={proof.image_url}
+                        alt={`Delivery proof ${proof.proof_type}`}
+                        className="w-full h-32 object-cover rounded-xl border-2 border-primary/20 group-hover:scale-105 transition-transform"
+                      />
+                      <Badge
+                        variant="secondary"
+                        className="absolute top-2 right-2 rounded-xl text-xs"
+                      >
+                        {proof.proof_type}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            )}
           </TabsContent>
 
           <TabsContent value="chat" className="mt-4">
