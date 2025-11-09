@@ -16,13 +16,11 @@ const Landing = () => {
         <div className="relative px-6 py-16 max-w-2xl mx-auto">
           {/* Logo and Brand */}
           <div className="text-center mb-12">
-            <div className="inline-flex items-center justify-center w-24 h-24 rounded-3xl bg-gradient-glass backdrop-blur-xl border-2 border-glassBorder shadow-glass mb-6 animate-pulse">
-              <img src={logo} alt="Field Setup" className="w-20 h-20 object-contain" />
+            <div className="inline-flex items-center justify-center w-32 h-32 rounded-full bg-white shadow-glass mb-6">
+              <img src={logo} alt="FOOD 4 U" className="w-full h-full object-contain rounded-full" />
             </div>
             <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-primary via-coralGlow to-primary bg-clip-text text-transparent leading-tight">
-              Share Food,
-              <br />
-              Share Love
+              FOOD 4 U
             </h1>
             <p className="text-lg text-muted-foreground max-w-md mx-auto">
               Join our community in reducing food waste while making a real difference in people's lives
