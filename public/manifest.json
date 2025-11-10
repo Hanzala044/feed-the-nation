@@ -1,0 +1,53 @@
+{
+  "name": "FOOD 4 U - Food Donation Platform",
+  "short_name": "FOOD 4 U",
+  "description": "🥗 Nourish with Purpose
+Connecting surplus food with those who need it most.
+Every meal saved is a life touched. We bridge the gap between abundance and need—transforming quality leftover food into hope, dignity, and nourishment.
+🌍 Reduce food waste. Serve communities. Strengthen the nation.
+Join us in building a more compassionate, sustainable future—one plate at a time.
+.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1a3a2e",
+  "theme_color": "#1a3a2e",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["food", "social", "lifestyle"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Donate Food",
+      "short_name": "Donate",
+      "description": "Create a new food donation",
+      "url": "/donor/create-donation",
+      "icons": [{ "src": "/logo.svg", "sizes": "96x96" }]
+    },
+    {
+      "name": "View Feed",
+      "short_name": "Feed",
+      "description": "Browse available donations",
+      "url": "/feed",
+      "icons": [{ "src": "/logo.svg", "sizes": "96x96" }]
+    }
+  ]
+}

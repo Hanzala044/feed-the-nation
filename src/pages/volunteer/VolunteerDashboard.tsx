@@ -19,7 +19,7 @@ import { DonationFilters } from "@/components/DonationFilters";
 import { AchievementBadges } from "@/components/AchievementBadges";
 import { DeliveryProofUpload } from "@/components/DeliveryProofUpload";
 import type { Database } from "@/integrations/supabase/types";
-import logo from "@/assets/logo.png";
+import logo from "@/assets/logo.svg";
 
 type Donation = Database["public"]["Tables"]["donations"]["Row"];
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];

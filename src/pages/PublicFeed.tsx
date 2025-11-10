@@ -62,23 +62,25 @@ const PublicFeed = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-warm">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
       {/* Hero Section */}
-      <div className="bg-gradient-to-br from-primary/10 via-cream/30 to-primary/5 backdrop-blur-xl border-b border-primary/10">
-        <div className="max-w-6xl mx-auto px-4 py-12 md:py-20 text-center">
-          <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-4">
+      <div className="relative overflow-hidden border-b border-primary/10">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-accent/5 to-transparent pointer-events-none" />
+        <div className="relative max-w-6xl mx-auto px-4 py-12 md:py-20 text-center">
+          <h1 className="text-4xl md:text-6xl font-bold gradient-text mb-4 animate-slide-up">
             Available Food Donations
           </h1>
-          <p className="text-lg md:text-xl text-foreground/70 mb-8 max-w-2xl mx-auto">
+          <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto animate-slide-up" style={{ animationDelay: '0.1s' }}>
             Join our community of volunteers and help reduce food waste while feeding those in need
           </p>
-          <div className="flex gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center animate-slide-up" style={{ animationDelay: '0.2s' }}>
             <Button
+              variant="gradient"
               size="lg"
               onClick={() => navigate("/auth")}
-              className="shadow-glow"
+              className="group"
             >
-              <Heart className="w-5 h-5 mr-2" />
+              <Heart className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" />
               Become a Volunteer
             </Button>
             <Button
@@ -99,7 +101,7 @@ const PublicFeed = () => {
             {donations.map((donation) => (
               <Card
                 key={donation.id}
-                className="glass-card overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group"
+                className="overflow-hidden cursor-pointer group"
                 onClick={() => navigate(`/donation/${donation.id}`)}
               >
                 {donation.image_url && (
@@ -145,26 +147,27 @@ const PublicFeed = () => {
                   </div>
 
                   <Button
-                    variant="glass"
-                    className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-all"
+                    variant="outline"
+                    className="w-full group-hover:bg-gradient-to-r group-hover:from-primary group-hover:to-accent group-hover:text-white group-hover:border-transparent transition-all"
                   >
                     View Details
-                    <ArrowRight className="w-4 h-4 ml-2" />
+                    <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </div>
               </Card>
             ))}
           </div>
         ) : (
-          <Card className="glass-card p-12 text-center">
-            <Heart className="w-16 h-16 mx-auto mb-4 text-primary/40" />
-            <h3 className="text-2xl font-bold text-foreground mb-2">
+          <Card className="p-12 text-center">
+            <Heart className="w-20 h-20 mx-auto mb-6 text-primary/40 animate-bounce-subtle" />
+            <h3 className="text-3xl font-bold gradient-text mb-3">
               No donations available right now
             </h3>
-            <p className="text-foreground/60 mb-6">
+            <p className="text-muted-foreground mb-8 text-lg">
               Check back soon or sign up to be notified of new donations
             </p>
-            <Button onClick={() => navigate("/auth")}>
+            <Button variant="gradient" size="lg" onClick={() => navigate("/auth")}>
+              <Heart className="w-5 h-5 mr-2" />
               Join as Volunteer
             </Button>
           </Card>

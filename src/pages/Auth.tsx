@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff } from "lucide-react";
 import { z } from "zod";
-import logo from "@/assets/logo.png";
+import logo from "@/assets/logo.svg";
 
 const authSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -140,41 +140,34 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[hsl(35,15%,20%)] dark:bg-[hsl(30,18%,9%)] relative overflow-hidden">
-      {/* Topographic Background Pattern */}
-      <div className="absolute inset-0 opacity-40">
-        <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <pattern id="topo" x="0" y="0" width="100" height="100" patternUnits="userSpaceOnUse">
-              <path d="M10 50 Q 25 45, 50 50 T 90 50" stroke="currentColor" strokeWidth="0.5" fill="none" className="text-primary/30"/>
-              <path d="M10 30 Q 25 25, 50 30 T 90 30" stroke="currentColor" strokeWidth="0.5" fill="none" className="text-primary/20"/>
-              <path d="M10 70 Q 25 65, 50 70 T 90 70" stroke="currentColor" strokeWidth="0.5" fill="none" className="text-primary/20"/>
-              <circle cx="30" cy="50" r="1.5" fill="currentColor" className="text-primary/40"/>
-              <circle cx="70" cy="50" r="1.5" fill="currentColor" className="text-primary/40"/>
-            </pattern>
-          </defs>
-          <rect width="100%" height="100%" fill="url(#topo)" />
-        </svg>
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 relative overflow-hidden">
+      {/* Animated Background Orbs */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-gradient-to-br from-primary/20 via-accent/20 to-transparent rounded-full blur-3xl animate-orb" />
+        <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-gradient-to-br from-accent/20 via-primary/20 to-transparent rounded-full blur-3xl animate-orb" style={{ animationDelay: '10s' }} />
       </div>
 
       <div className="relative px-6 py-12 max-w-md mx-auto">
         {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 mb-4">
-            <img src={logo} alt="Field Setup Logo" className="w-full h-full object-contain rounded-2xl" />
+        <div className="text-center mb-8 animate-slide-up">
+          <div className="inline-flex items-center justify-center w-28 h-28 mb-6 rounded-full bg-white/10 backdrop-blur-sm shadow-glow p-3 animate-glow-pulse">
+            <img src={logo} alt="FOOD 4 U Logo" className="w-full h-full object-contain" />
           </div>
-          <h1 className="text-4xl font-bold text-white mb-2">
-            {mode === "login" ? "Sign In" : "Sign Up"}
+          <h1 className="text-4xl font-bold gradient-text mb-2">
+            {mode === "login" ? "Welcome Back" : "Join Us"}
           </h1>
+          <p className="text-muted-foreground">
+            {mode === "login" ? "Sign in to your account" : "Create your account"}
+          </p>
         </div>
 
         {/* Glassmorphic Form Card */}
-        <div className="backdrop-blur-xl bg-white/10 dark:bg-white/5 border border-white/20 rounded-3xl p-6 shadow-glass">
+        <div className="glass-card p-8 animate-slide-up" style={{ animationDelay: '0.1s' }}>
           <form onSubmit={handleSubmit} className="space-y-4">
             {mode === "signup" && (
               <>
                 <div className="space-y-2">
-                  <Label htmlFor="fullName" className="text-white/90">Full Name</Label>
+                  <Label htmlFor="fullName">Full Name</Label>
                   <Input
                     id="fullName"
                     type="text"
@@ -183,35 +176,27 @@ const Auth = () => {
                     onChange={(e) =>
                       setFormData({ ...formData, fullName: e.target.value })
                     }
-                    className="h-14 rounded-2xl bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:bg-white/20 transition-all"
+                    className="h-12"
                     required
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-white/90">I want to be a</Label>
+                  <Label>I want to be a</Label>
                   <div className="grid grid-cols-2 gap-3">
                     <Button
                       type="button"
                       onClick={() => setRole("donor")}
-                      variant={role === "donor" ? "default" : "outline"}
-                      className={`h-14 rounded-2xl text-base font-semibold transition-all ${
-                        role === "donor" 
-                          ? "bg-primary text-white shadow-glow" 
-                          : "bg-white/10 border-white/20 text-white hover:bg-white/20"
-                      }`}
+                      variant={role === "donor" ? "gradient" : "outline"}
+                      className="h-12"
                     >
                       Donor
                     </Button>
                     <Button
                       type="button"
                       onClick={() => setRole("volunteer")}
-                      variant={role === "volunteer" ? "default" : "outline"}
-                      className={`h-14 rounded-2xl text-base font-semibold transition-all ${
-                        role === "volunteer" 
-                          ? "bg-primary text-white shadow-glow" 
-                          : "bg-white/10 border-white/20 text-white hover:bg-white/20"
-                      }`}
+                      variant={role === "volunteer" ? "gradient" : "outline"}
+                      className="h-12"
                     >
                       Volunteer
                     </Button>
@@ -221,7 +206,7 @@ const Auth = () => {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-white/90">Email</Label>
+              <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -230,13 +215,13 @@ const Auth = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, email: e.target.value })
                 }
-                className="h-14 rounded-2xl bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:bg-white/20 transition-all"
+                className="h-12"
                 required
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-white/90">Password</Label>
+              <Label htmlFor="password">Password</Label>
               <div className="relative">
                 <Input
                   id="password"
@@ -246,13 +231,13 @@ const Auth = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, password: e.target.value })
                   }
-                  className="h-14 rounded-2xl bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:bg-white/20 transition-all pr-12"
+                  className="h-12 pr-12"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-white/60 hover:text-white/90 transition-colors"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -263,7 +248,7 @@ const Auth = () => {
               <div className="flex items-center">
                 <button
                   type="button"
-                  className="text-sm text-white/70 hover:text-white transition-colors"
+                  className="text-sm text-primary hover:text-accent transition-colors"
                 >
                   Forgot password?
                 </button>
@@ -273,18 +258,20 @@ const Auth = () => {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full h-14 rounded-2xl text-base font-bold bg-primary hover:bg-primary/90 text-white shadow-glow"
+              variant="gradient"
+              size="lg"
+              className="w-full"
             >
               {loading ? "Loading..." : mode === "login" ? "Sign In" : "Sign Up"}
             </Button>
           </form>
 
           <div className="mt-6 text-center">
-            <p className="text-sm text-white/70">
+            <p className="text-sm text-muted-foreground">
               {mode === "login" ? "Don't have an account?" : "Already have an account?"}{" "}
               <button
                 onClick={() => setMode(mode === "login" ? "signup" : "login")}
-                className="text-white font-semibold hover:underline"
+                className="text-primary font-semibold hover:text-accent transition-colors"
               >
                 {mode === "login" ? "Sign Up" : "Sign In"}
               </button>
