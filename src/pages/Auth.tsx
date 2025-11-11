@@ -5,9 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Moon, Sun, X } from "lucide-react";
 import { z } from "zod";
 import logo from "@/assets/logo.svg";
+import { useTheme } from "@/components/ThemeProvider";
 
 const authSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -19,12 +20,14 @@ const Auth = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
+  const { theme, setTheme } = useTheme();
   const [mode, setMode] = useState<"login" | "signup">(
     (searchParams.get("mode") as "login" | "signup") || "login"
   );
   const [role, setRole] = useState<"donor" | "volunteer">("donor");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showLogoModal, setShowLogoModal] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -140,34 +143,74 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 relative overflow-hidden">
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-[#ff6b35] via-[#1a1a1a] to-[#000000] dark:from-[#ff6b35] dark:via-[#1a1a1a] dark:to-[#000000] light:from-[#fef3e2] light:via-[#fef7ed] light:to-[#fef3e2]">
       {/* Animated Background Orbs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-gradient-to-br from-primary/20 via-accent/20 to-transparent rounded-full blur-3xl animate-orb" />
-        <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-gradient-to-br from-accent/20 via-primary/20 to-transparent rounded-full blur-3xl animate-orb" style={{ animationDelay: '10s' }} />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-gradient-to-b from-[#ff6b35] via-[#ff8c42] to-transparent dark:from-[#ff6b35] dark:via-[#ff8c42] light:from-[#ffd4a3] light:via-[#ffe4c4] rounded-full blur-[120px] opacity-60" />
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-gradient-to-t from-[#ff6b35] via-[#ff8c42] to-transparent dark:from-[#ff6b35] dark:via-[#ff8c42] light:from-[#ffd4a3] light:via-[#ffe4c4] rounded-full blur-[120px] opacity-40" />
+        
+        {/* Starfield effect - only in dark mode */}
+        <div className="absolute inset-0 dark:block hidden">
+          {[...Array(30)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute w-1 h-1 bg-white rounded-full opacity-30"
+              style={{
+                top: `${Math.random() * 60}%`,
+                left: `${Math.random() * 100}%`,
+                animation: `twinkle ${2 + Math.random() * 3}s ease-in-out infinite`,
+                animationDelay: `${Math.random() * 2}s`,
+              }}
+            />
+          ))}
+        </div>
       </div>
 
-      <div className="relative px-6 py-12 max-w-md mx-auto">
-        {/* Logo */}
-        <div className="text-center mb-8 animate-slide-up">
-          <div className="inline-flex items-center justify-center w-28 h-28 mb-6 rounded-full bg-white/10 backdrop-blur-sm shadow-glow p-3 animate-glow-pulse">
-            <img src={logo} alt="FOOD 4 U Logo" className="w-full h-full object-contain" />
+      {/* Theme Toggle */}
+      <div className="absolute top-6 right-6 z-50">
+        <button
+          onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+          className="w-10 h-10 rounded-full bg-white/10 dark:bg-white/10 light:bg-black/10 backdrop-blur-md border border-white/20 dark:border-white/20 light:border-black/20 flex items-center justify-center text-white dark:text-white light:text-black hover:bg-white/20 dark:hover:bg-white/20 light:hover:bg-black/20 transition-all"
+        >
+          {theme === "light" ? (
+            <Moon className="w-5 h-5" />
+          ) : (
+            <Sun className="w-5 h-5" />
+          )}
+        </button>
+      </div>
+
+      {/* Main Content */}
+      <div className="relative min-h-screen flex flex-col items-center justify-between px-6 py-12 max-w-md mx-auto">
+        {/* Top Section - Logo and Brand */}
+        <div className="w-full pt-8">
+          <div className="flex items-center justify-center mb-12">
+            <button 
+              onClick={() => setShowLogoModal(true)}
+              className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer"
+            >
+              <img src={logo} alt="FOOD 4 U" className="w-10 h-10 rounded-lg" />
+              <span className="text-white dark:text-white light:text-black font-semibold text-xl">FOOD 4 U</span>
+            </button>
           </div>
-          <h1 className="text-4xl font-bold gradient-text mb-2">
-            {mode === "login" ? "Welcome Back" : "Join Us"}
-          </h1>
-          <p className="text-muted-foreground">
-            {mode === "login" ? "Sign in to your account" : "Create your account"}
-          </p>
+
+          {/* Badge */}
+          <div className="flex justify-center mb-8">
+            <div className="px-6 py-2 rounded-full bg-white/10 dark:bg-white/10 light:bg-black/10 backdrop-blur-md border border-white/20 dark:border-white/20 light:border-black/20">
+              <span className="text-white/90 dark:text-white/90 light:text-black/90 text-sm font-medium">
+                {mode === "login" ? "Welcome Back" : "Join Us"}
+              </span>
+            </div>
+          </div>
         </div>
 
-        {/* Glassmorphic Form Card */}
-        <div className="glass-card p-8 animate-slide-up" style={{ animationDelay: '0.1s' }}>
-          <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Center Section - Form */}
+        <div className="w-full flex-1 flex flex-col justify-center -mt-12">
+          <form onSubmit={handleSubmit} className="space-y-5">
             {mode === "signup" && (
               <>
                 <div className="space-y-2">
-                  <Label htmlFor="fullName">Full Name</Label>
+                  <Label htmlFor="fullName" className="text-white/80 dark:text-white/80 light:text-black/80 text-sm">Full Name</Label>
                   <Input
                     id="fullName"
                     type="text"
@@ -176,27 +219,33 @@ const Auth = () => {
                     onChange={(e) =>
                       setFormData({ ...formData, fullName: e.target.value })
                     }
-                    className="h-12"
+                    className="h-14 bg-white/10 dark:bg-white/10 light:bg-black/5 border-white/20 dark:border-white/20 light:border-black/20 text-white dark:text-white light:text-black placeholder:text-white/50 dark:placeholder:text-white/50 light:placeholder:text-black/50 rounded-xl backdrop-blur-md"
                     required
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label>I want to be a</Label>
+                  <Label className="text-white/80 dark:text-white/80 light:text-black/80 text-sm">I want to be a</Label>
                   <div className="grid grid-cols-2 gap-3">
                     <Button
                       type="button"
                       onClick={() => setRole("donor")}
-                      variant={role === "donor" ? "gradient" : "outline"}
-                      className="h-12"
+                      className={`h-12 rounded-xl font-semibold transition-all ${
+                        role === "donor"
+                          ? "bg-white dark:bg-white light:bg-black text-black dark:text-black light:text-white"
+                          : "bg-white/10 dark:bg-white/10 light:bg-black/10 text-white dark:text-white light:text-black border border-white/20 dark:border-white/20 light:border-black/20"
+                      }`}
                     >
                       Donor
                     </Button>
                     <Button
                       type="button"
                       onClick={() => setRole("volunteer")}
-                      variant={role === "volunteer" ? "gradient" : "outline"}
-                      className="h-12"
+                      className={`h-12 rounded-xl font-semibold transition-all ${
+                        role === "volunteer"
+                          ? "bg-white dark:bg-white light:bg-black text-black dark:text-black light:text-white"
+                          : "bg-white/10 dark:bg-white/10 light:bg-black/10 text-white dark:text-white light:text-black border border-white/20 dark:border-white/20 light:border-black/20"
+                      }`}
                     >
                       Volunteer
                     </Button>
@@ -206,7 +255,7 @@ const Auth = () => {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-white/80 dark:text-white/80 light:text-black/80 text-sm">Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -215,13 +264,13 @@ const Auth = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, email: e.target.value })
                 }
-                className="h-12"
+                className="h-14 bg-white/10 dark:bg-white/10 light:bg-black/5 border-white/20 dark:border-white/20 light:border-black/20 text-white dark:text-white light:text-black placeholder:text-white/50 dark:placeholder:text-white/50 light:placeholder:text-black/50 rounded-xl backdrop-blur-md"
                 required
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" className="text-white/80 dark:text-white/80 light:text-black/80 text-sm">Password</Label>
               <div className="relative">
                 <Input
                   id="password"
@@ -231,13 +280,13 @@ const Auth = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, password: e.target.value })
                   }
-                  className="h-12 pr-12"
+                  className="h-14 pr-12 bg-white/10 dark:bg-white/10 light:bg-black/5 border-white/20 dark:border-white/20 light:border-black/20 text-white dark:text-white light:text-black placeholder:text-white/50 dark:placeholder:text-white/50 light:placeholder:text-black/50 rounded-xl backdrop-blur-md"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-white/60 dark:text-white/60 light:text-black/60 hover:text-white dark:hover:text-white light:hover:text-black transition-colors"
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -248,7 +297,7 @@ const Auth = () => {
               <div className="flex items-center">
                 <button
                   type="button"
-                  className="text-sm text-primary hover:text-accent transition-colors"
+                  className="text-sm text-white/70 dark:text-white/70 light:text-black/70 hover:text-white dark:hover:text-white light:hover:text-black transition-colors"
                 >
                   Forgot password?
                 </button>
@@ -258,27 +307,96 @@ const Auth = () => {
             <Button
               type="submit"
               disabled={loading}
-              variant="gradient"
-              size="lg"
-              className="w-full"
+              className="w-full h-14 bg-white dark:bg-white light:bg-black hover:bg-white/90 dark:hover:bg-white/90 light:hover:bg-black/90 text-black dark:text-black light:text-white font-semibold text-base rounded-xl transition-all mt-6"
             >
               {loading ? "Loading..." : mode === "login" ? "Sign In" : "Sign Up"}
             </Button>
           </form>
+        </div>
 
-          <div className="mt-6 text-center">
-            <p className="text-sm text-muted-foreground">
-              {mode === "login" ? "Don't have an account?" : "Already have an account?"}{" "}
-              <button
-                onClick={() => setMode(mode === "login" ? "signup" : "login")}
-                className="text-primary font-semibold hover:text-accent transition-colors"
-              >
-                {mode === "login" ? "Sign Up" : "Sign In"}
-              </button>
-            </p>
-          </div>
+        {/* Bottom Section - Toggle Mode */}
+        <div className="w-full pb-8">
+          <p className="text-center text-sm text-white/60 dark:text-white/60 light:text-black/60">
+            {mode === "login" ? "Don't have an account?" : "Already have an account?"}{" "}
+            <button
+              onClick={() => setMode(mode === "login" ? "signup" : "login")}
+              className="text-white dark:text-white light:text-black font-semibold hover:text-white/80 dark:hover:text-white/80 light:hover:text-black/80 transition-colors"
+            >
+              {mode === "login" ? "Sign Up" : "Sign In"}
+            </button>
+          </p>
         </div>
       </div>
+
+      {/* Logo Modal */}
+      {showLogoModal && (
+        <div 
+          className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm animate-fade-in"
+          onClick={() => setShowLogoModal(false)}
+        >
+          <div 
+            className="relative max-w-md w-full bg-white/10 dark:bg-white/10 light:bg-black/10 backdrop-blur-xl border border-white/20 dark:border-white/20 light:border-black/20 rounded-3xl p-8 shadow-2xl animate-scale-in"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close Button */}
+            <button
+              onClick={() => setShowLogoModal(false)}
+              className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 dark:bg-white/10 light:bg-black/10 backdrop-blur-md border border-white/20 dark:border-white/20 light:border-black/20 flex items-center justify-center text-white dark:text-white light:text-black hover:bg-white/20 dark:hover:bg-white/20 light:hover:bg-black/20 transition-all"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Logo */}
+            <div className="flex justify-center mb-6">
+              <div className="w-32 h-32 rounded-3xl bg-white/20 dark:bg-white/20 light:bg-black/20 backdrop-blur-md border border-white/30 dark:border-white/30 light:border-black/30 p-6 shadow-xl">
+                <img src={logo} alt="FOOD 4 U" className="w-full h-full object-contain" />
+              </div>
+            </div>
+
+            {/* Title */}
+            <div className="text-center space-y-4">
+              <h2 className="text-2xl font-bold text-white dark:text-white light:text-black leading-tight">
+                In presence of our team FOOD 4 U
+              </h2>
+              <p className="text-xl font-semibold text-white/90 dark:text-white/90 light:text-black/90 leading-relaxed">
+                Inshallah no one will sleep hungry Inshallah.
+              </p>
+              <div className="pt-4 border-t border-white/20 dark:border-white/20 light:border-black/20">
+                <p className="text-base text-white/70 dark:text-white/70 light:text-black/70 italic">
+                  - by HANZALA & FOOD 4 U
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        @keyframes twinkle {
+          0%, 100% { opacity: 0.2; }
+          50% { opacity: 0.8; }
+        }
+        @keyframes fade-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes scale-in {
+          from { 
+            opacity: 0;
+            transform: scale(0.9);
+          }
+          to { 
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+        .animate-fade-in {
+          animation: fade-in 0.2s ease-out;
+        }
+        .animate-scale-in {
+          animation: scale-in 0.3s ease-out;
+        }
+      `}</style>
     </div>
   );
 };
