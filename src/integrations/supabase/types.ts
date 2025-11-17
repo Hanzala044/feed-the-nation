@@ -96,7 +96,7 @@ export type Database = {
           created_at: string | null
           delivered_at: string | null
           description: string
-          donor_id: string
+          donor_id: string | null
           expiry_date: string
           food_type: string
           id: string
@@ -104,6 +104,7 @@ export type Database = {
           picked_up_at: string | null
           pickup_address: string
           pickup_city: string
+          is_anonymous: boolean | null
           pickup_latitude: number | null
           pickup_longitude: number | null
           pickup_time: string
@@ -118,7 +119,7 @@ export type Database = {
           created_at?: string | null
           delivered_at?: string | null
           description: string
-          donor_id: string
+          donor_id?: string | null
           expiry_date: string
           food_type: string
           id?: string
@@ -126,6 +127,7 @@ export type Database = {
           picked_up_at?: string | null
           pickup_address: string
           pickup_city: string
+          is_anonymous?: boolean | null
           pickup_latitude?: number | null
           pickup_longitude?: number | null
           pickup_time: string
@@ -140,7 +142,7 @@ export type Database = {
           created_at?: string | null
           delivered_at?: string | null
           description?: string
-          donor_id?: string
+          donor_id?: string | null
           expiry_date?: string
           food_type?: string
           id?: string
@@ -148,6 +150,7 @@ export type Database = {
           picked_up_at?: string | null
           pickup_address?: string
           pickup_city?: string
+          is_anonymous?: boolean | null
           pickup_latitude?: number | null
           pickup_longitude?: number | null
           pickup_time?: string

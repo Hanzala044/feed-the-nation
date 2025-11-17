@@ -35,7 +35,7 @@ const Landing = () => {
       </div>
 
       {/* Top Right Buttons */}
-      <div className="absolute top-6 right-6 z-50 flex items-center gap-3">
+      <div className="absolute top-6 right-6 z-50 flex flex-col items-end gap-2">
         {/* Theme Toggle */}
         <button
           onClick={() => setTheme(theme === "light" ? "dark" : "light")}
@@ -55,6 +55,16 @@ const Landing = () => {
         >
           Skip
         </button>
+
+        {/* Scan QR */}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => navigate("/scan")}
+          className="rounded-xl"
+        >
+          Scan QR
+        </Button>
       </div>
 
       {/* Main Content */}
@@ -97,14 +107,15 @@ const Landing = () => {
         <div className="w-full space-y-4 pb-8">
           <Button
             onClick={() => navigate("/auth?mode=signup")}
-            className="w-full h-14 bg-white dark:bg-white light:bg-black hover:bg-white/90 dark:hover:bg-white/90 light:hover:bg-black/90 text-black dark:text-black light:text-white font-semibold text-base rounded-xl transition-all"
+            variant="shiny"
+            className="w-full h-14 font-semibold text-base [&::before]:bg-white dark:[&::before]:bg-black text-black dark:text-white"
           >
             Get Started
           </Button>
           <Button
             onClick={() => navigate("/auth?mode=login")}
-            variant="outline"
-            className="w-full h-14 bg-transparent hover:bg-white/10 dark:hover:bg-white/10 light:hover:bg-black/10 text-white dark:text-white light:text-black border-white/20 dark:border-white/20 light:border-black/20 font-semibold text-base rounded-xl transition-all"
+            variant="shiny"
+            className="w-full h-14 font-semibold text-base [&::before]:bg-transparent text-white dark:text-white border-white/20 dark:border-white/20"
           >
             Sign In
           </Button>

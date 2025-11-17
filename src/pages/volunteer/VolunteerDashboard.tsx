@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from "@/hooks/useNotifications";
-import { Package, LogOut, CheckCircle, BarChart3, MessageCircle, Bell, Eye, X, Check, Upload } from "lucide-react";
+import { Package, LogOut, CheckCircle, BarChart3, MessageCircle, Bell, Eye, Check, Upload, Home, Newspaper } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -33,6 +33,7 @@ const VolunteerDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [selectedDonation, setSelectedDonation] = useState<Donation | null>(null);
   const [uploadProofDonation, setUploadProofDonation] = useState<Donation | null>(null);
+  const [activeTab, setActiveTab] = useState("available");
   const [filters, setFilters] = useState({
     search: "",
     foodType: "all",
@@ -40,6 +41,7 @@ const VolunteerDashboard = () => {
     urgency: "all",
     sortBy: "newest",
   });
+  
 
   const { notificationsEnabled, requestPermission, sendNotification } = useNotifications(profile?.id);
 
@@ -285,7 +287,7 @@ const VolunteerDashboard = () => {
           </div>
         </Card>
 
-        <Tabs defaultValue="available" className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-5 rounded-xl text-xs">
             <TabsTrigger value="available">Available</TabsTrigger>
             <TabsTrigger value="my-donations">Active</TabsTrigger>
@@ -545,6 +547,43 @@ const VolunteerDashboard = () => {
             )}
           </DialogContent>
         </Dialog>
+        
+        <div className="fixed bottom-0 inset-x-0 z-50 border-t bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="mx-auto max-w-md px-4 py-2 grid grid-cols-4 gap-2">
+            <Button
+              variant={activeTab === "available" ? "default" : "outline"}
+              onClick={() => setActiveTab("available")}
+              className="flex flex-col items-center gap-1 py-2"
+            >
+              <Home className="w-4 h-4" />
+              <span className="text-xs">Browse</span>
+            </Button>
+            <Button
+              variant={activeTab === "my-donations" ? "default" : "outline"}
+              onClick={() => setActiveTab("my-donations")}
+              className="flex flex-col items-center gap-1 py-2"
+            >
+              <CheckCircle className="w-4 h-4" />
+              <span className="text-xs">Active</span>
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => navigate("/feed")}
+              className="flex flex-col items-center gap-1 py-2"
+            >
+              <Newspaper className="w-4 h-4" />
+              <span className="text-xs">Feed</span>
+            </Button>
+            <Button
+              variant={activeTab === "analytics" ? "default" : "outline"}
+              onClick={() => setActiveTab("analytics")}
+              className="flex flex-col items-center gap-1 py-2"
+            >
+              <BarChart3 className="w-4 h-4" />
+              <span className="text-xs">Stats</span>
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );

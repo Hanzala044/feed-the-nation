@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { LocationPicker } from "@/components/LocationPicker";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, UtensilsCrossed, Apple, Package as PackageIcon, Wheat, Cookie } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { z } from "zod";
 
@@ -27,6 +28,7 @@ const CreateDonation = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [anonymous, setAnonymous] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -48,6 +50,11 @@ const CreateDonation = () => {
     { value: "fruits", label: "Fruits & Veggies", icon: Apple },
     { value: "bakery", label: "Bakery Items", icon: Cookie },
   ];
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setAnonymous(params.get("anonymous") === "true");
+  }, []);
 
   const handleLocationSelect = (lat: number, lng: number, address: string) => {
     setFormData({
@@ -75,14 +82,28 @@ const CreateDonation = () => {
       }
 
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
+
+      let donorId: string | null = session?.user?.id || null;
+      if (!donorId && anonymous) {
+        const ANON_ID = "00000000-0000-0000-0000-000000000000";
+        donorId = ANON_ID;
+        await supabase
+          .from("profiles")
+          .upsert({
+            id: ANON_ID,
+            full_name: "Anonymous",
+            email: "anonymous@food4u.local",
+            role: "donor",
+          }, { onConflict: "id" });
+      } else if (!donorId) {
         navigate("/auth");
         return;
       }
 
       const { error } = await supabase.from("donations").insert({
-        donor_id: session.user.id,
-        title: formData.title,
+        donor_id: anonymous ? null : donorId,
+        is_anonymous: anonymous,
+        title: anonymous ? `[Anonymous] ${formData.title}` : formData.title,
         description: formData.description,
         food_type: formData.foodType,
         quantity: formData.quantity,
@@ -100,10 +121,10 @@ const CreateDonation = () => {
 
       toast({
         title: "Success!",
-        description: "Donation created successfully",
+        description: anonymous ? "Anonymous donation created successfully" : "Donation created successfully",
       });
 
-      navigate("/donor/dashboard");
+      navigate(anonymous ? "/feed" : "/donor/dashboard");
     } catch (error: any) {
       toast({
         title: "Error",
@@ -133,6 +154,10 @@ const CreateDonation = () => {
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="flex items-center justify-between">
+            <Label>Anonymous Donation</Label>
+            <Switch checked={anonymous} onCheckedChange={(v) => setAnonymous(!!v)} />
+          </div>
           <div className="space-y-2">
             <Label htmlFor="title">Title</Label>
             <Input

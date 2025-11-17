@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { CheckCircle, Clock, Truck, Package } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -8,7 +9,7 @@ interface TimelineProps {
   deliveredAt?: string | null;
 }
 
-export const DonationTimeline = ({ status, createdAt, pickedUpAt, deliveredAt }: TimelineProps) => {
+export const DonationTimeline = memo(({ status, createdAt, pickedUpAt, deliveredAt }: TimelineProps) => {
   const stages = [
     { 
       key: "pending", 
@@ -97,4 +98,5 @@ export const DonationTimeline = ({ status, createdAt, pickedUpAt, deliveredAt }:
       </div>
     </div>
   );
-};
+});
+DonationTimeline.displayName = "DonationTimeline";

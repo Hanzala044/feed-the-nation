@@ -1,14 +1,16 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Eye, EyeOff, Moon, Sun, X } from "lucide-react";
+import { Moon, Sun, X } from "lucide-react";
 import { z } from "zod";
 import logo from "@/assets/logo.svg";
 import { useTheme } from "@/components/ThemeProvider";
+import { PasswordStrengthIndicator } from "@/components/PasswordStrengthIndicator";
+import type { StrengthLevel } from "@/components/PasswordStrengthIndicator";
 
 const authSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -26,8 +28,8 @@ const Auth = () => {
   );
   const [role, setRole] = useState<"donor" | "volunteer">("donor");
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
   const [showLogoModal, setShowLogoModal] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState<StrengthLevel>("empty");
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -230,22 +232,24 @@ const Auth = () => {
                     <Button
                       type="button"
                       onClick={() => setRole("donor")}
-                      className={`h-12 rounded-xl font-semibold transition-all ${
+                      variant="outline"
+                      className={`${
                         role === "donor"
-                          ? "bg-white dark:bg-white light:bg-black text-black dark:text-black light:text-white"
-                          : "bg-white/10 dark:bg-white/10 light:bg-black/10 text-white dark:text-white light:text-black border border-white/20 dark:border-white/20 light:border-black/20"
-                      }`}
+                          ? "ring-2 ring-primary font-bold bg-primary/10 text-white dark:text-white light:text-black"
+                          : "border-white/20 dark:border-white/20 light:border-black/20 text-white dark:text-white light:text-black"
+                      } h-12`}
                     >
                       Donor
                     </Button>
                     <Button
                       type="button"
                       onClick={() => setRole("volunteer")}
-                      className={`h-12 rounded-xl font-semibold transition-all ${
+                      variant="outline"
+                      className={`${
                         role === "volunteer"
-                          ? "bg-white dark:bg-white light:bg-black text-black dark:text-black light:text-white"
-                          : "bg-white/10 dark:bg-white/10 light:bg-black/10 text-white dark:text-white light:text-black border border-white/20 dark:border-white/20 light:border-black/20"
-                      }`}
+                          ? "ring-2 ring-primary font-bold bg-primary/10 text-white dark:text-white light:text-black"
+                          : "border-white/20 dark:border-white/20 light:border-black/20 text-white dark:text-white light:text-black"
+                      } h-12`}
                     >
                       Volunteer
                     </Button>
@@ -269,29 +273,34 @@ const Auth = () => {
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password" className="text-white/80 dark:text-white/80 light:text-black/80 text-sm">Password</Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
+            {mode === "signup" ? (
+              <PasswordStrengthIndicator
+                value={formData.password}
+                onChange={(value) => setFormData({ ...formData, password: value })}
+                onStrengthChange={setPasswordStrength}
+                label="Password"
+                placeholder="••••••••"
+                showScore={true}
+                showScoreNumber={false}
+                showVisibilityToggle={true}
+                className="[&_label]:text-white/80 dark:[&_label]:text-white/80 light:[&_label]:text-black/80 [&_input]:h-14 [&_input]:bg-white/10 dark:[&_input]:bg-white/10 light:[&_input]:bg-black/5 [&_input]:border-white/20 dark:[&_input]:border-white/20 light:[&_input]:border-black/20 [&_input]:text-white dark:[&_input]:text-white light:[&_input]:text-black [&_input]:placeholder:text-white/50 dark:[&_input]:placeholder:text-white/50 light:[&_input]:placeholder:text-black/50 [&_input]:rounded-xl [&_input]:backdrop-blur-md [&_p]:text-white/70 dark:[&_p]:text-white/70 light:[&_p]:text-black/70"
+                inputProps={{ required: true }}
+              />
+            ) : (
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-white/80 dark:text-white/80 light:text-black/80 text-sm">Password</Label>
+                <PasswordStrengthIndicator
                   value={formData.password}
-                  onChange={(e) =>
-                    setFormData({ ...formData, password: e.target.value })
-                  }
-                  className="h-14 pr-12 bg-white/10 dark:bg-white/10 light:bg-black/5 border-white/20 dark:border-white/20 light:border-black/20 text-white dark:text-white light:text-black placeholder:text-white/50 dark:placeholder:text-white/50 light:placeholder:text-black/50 rounded-xl backdrop-blur-md"
-                  required
+                  onChange={(value) => setFormData({ ...formData, password: value })}
+                  label=""
+                  placeholder="••••••••"
+                  showScore={false}
+                  showVisibilityToggle={true}
+                  className="[&_input]:h-14 [&_input]:bg-white/10 dark:[&_input]:bg-white/10 light:[&_input]:bg-black/5 [&_input]:border-white/20 dark:[&_input]:border-white/20 light:[&_input]:border-black/20 [&_input]:text-white dark:[&_input]:text-white light:[&_input]:text-black [&_input]:placeholder:text-white/50 dark:[&_input]:placeholder:text-white/50 light:[&_input]:placeholder:text-black/50 [&_input]:rounded-xl [&_input]:backdrop-blur-md"
+                  inputProps={{ required: true, id: "password" }}
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-white/60 dark:text-white/60 light:text-black/60 hover:text-white dark:hover:text-white light:hover:text-black transition-colors"
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
               </div>
-            </div>
+            )}
 
             {mode === "login" && (
               <div className="flex items-center">
@@ -307,7 +316,8 @@ const Auth = () => {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full h-14 bg-white dark:bg-white light:bg-black hover:bg-white/90 dark:hover:bg-white/90 light:hover:bg-black/90 text-black dark:text-black light:text-white font-semibold text-base rounded-xl transition-all mt-6"
+              variant="shiny"
+              className="w-full h-14 font-semibold text-base mt-6 [&::before]:bg-white dark:[&::before]:bg-black"
             >
               {loading ? "Loading..." : mode === "login" ? "Sign In" : "Sign Up"}
             </Button>

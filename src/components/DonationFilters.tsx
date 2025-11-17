@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, memo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -18,8 +18,13 @@ interface DonationFiltersProps {
   onFiltersChange: (filters: FilterState) => void;
 }
 
-export const DonationFilters = ({ filters, onFiltersChange }: DonationFiltersProps) => {
+export const DonationFilters = memo(({ filters, onFiltersChange }: DonationFiltersProps) => {
   const [localFilters, setLocalFilters] = useState(filters);
+
+  // Sync local filters when props change
+  useEffect(() => {
+    setLocalFilters(filters);
+  }, [filters]);
 
   const handleApply = () => {
     onFiltersChange(localFilters);
@@ -165,4 +170,5 @@ export const DonationFilters = ({ filters, onFiltersChange }: DonationFiltersPro
       </Sheet>
     </div>
   );
-};
+});
+DonationFilters.displayName = "DonationFilters";

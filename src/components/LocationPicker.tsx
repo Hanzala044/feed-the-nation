@@ -59,7 +59,7 @@ export const LocationPicker = ({ onLocationSelect, currentAddress }: LocationPic
           variant: "destructive",
         });
       }
-    );
+    , { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
   };
 
   return (

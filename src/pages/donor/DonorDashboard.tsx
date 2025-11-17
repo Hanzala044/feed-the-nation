@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from "@/hooks/useNotifications";
-import { Plus, LogOut, Edit, Trash2, BarChart3, Bell, Eye, MessageCircle, Package } from "lucide-react";
+import { Plus, LogOut, Edit, Trash2, BarChart3, Bell, Eye, MessageCircle, Package, Home, Newspaper } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -32,6 +32,7 @@ const DonorDashboard = () => {
   const [pastDonations, setPastDonations] = useState<Donation[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedDonation, setSelectedDonation] = useState<Donation | null>(null);
+  const [activeTab, setActiveTab] = useState("active");
   const [filters, setFilters] = useState({
     search: "",
     foodType: "all",
@@ -312,7 +313,7 @@ const DonorDashboard = () => {
           Create New Donation
         </Button>
 
-        <Tabs defaultValue="active" className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-4 rounded-xl">
             <TabsTrigger value="active">Active</TabsTrigger>
             <TabsTrigger value="past">Past</TabsTrigger>
@@ -412,6 +413,43 @@ const DonorDashboard = () => {
             )}
           </DialogContent>
         </Dialog>
+      </div>
+
+      <div className="fixed bottom-0 inset-x-0 z-50 border-t bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="mx-auto max-w-md px-4 py-2 grid grid-cols-4 gap-2">
+          <Button
+            variant={activeTab === "active" ? "default" : "outline"}
+            onClick={() => setActiveTab("active")}
+            className="flex flex-col items-center gap-1 py-2"
+          >
+            <Home className="w-4 h-4" />
+            <span className="text-xs">Dashboard</span>
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => navigate("/donor/create-donation")}
+            className="flex flex-col items-center gap-1 py-2"
+          >
+            <Plus className="w-4 h-4" />
+            <span className="text-xs">New</span>
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => navigate("/feed")}
+            className="flex flex-col items-center gap-1 py-2"
+          >
+            <Newspaper className="w-4 h-4" />
+            <span className="text-xs">Feed</span>
+          </Button>
+          <Button
+            variant={activeTab === "analytics" ? "default" : "outline"}
+            onClick={() => setActiveTab("analytics")}
+            className="flex flex-col items-center gap-1 py-2"
+          >
+            <BarChart3 className="w-4 h-4" />
+            <span className="text-xs">Stats</span>
+          </Button>
+        </div>
       </div>
     </div>
   );

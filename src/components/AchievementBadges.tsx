@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -16,7 +16,7 @@ const ACHIEVEMENT_ICONS: Record<string, any> = {
   impact_milestone: Target,
 };
 
-export const AchievementBadges = ({ userId }: { userId: string }) => {
+export const AchievementBadges = memo(({ userId }: { userId: string }) => {
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -89,4 +89,5 @@ export const AchievementBadges = ({ userId }: { userId: string }) => {
       </div>
     </Card>
   );
-};
+});
+AchievementBadges.displayName = "AchievementBadges";
