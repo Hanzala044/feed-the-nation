@@ -9,7 +9,24 @@ import { DonationTimeline } from "@/components/DonationTimeline";
 import { DonationMessaging } from "@/components/DonationMessaging";
 import { RatingSystem } from "@/components/RatingSystem";
 import { EmbeddedMap } from "@/components/EmbeddedMap";
-import { ArrowLeft, Clock, MapPin, Package, Star } from "lucide-react";
+import {
+  ArrowLeft,
+  Clock,
+  MapPin,
+  Package,
+  Star,
+  Share2,
+  MoreHorizontal,
+  Calendar,
+  User,
+  CheckCircle2,
+  Circle,
+  Truck,
+  Gift,
+  MessageCircle,
+  Image as ImageIcon,
+  AlertCircle
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -92,12 +109,108 @@ const DonationDetail = () => {
     }
   };
 
+  // Horizontal Timeline Stepper Component
+  const HorizontalStepper = ({ status, createdAt, pickedUpAt, deliveredAt }: {
+    status: string;
+    createdAt: string;
+    pickedUpAt: string | null;
+    deliveredAt: string | null;
+  }) => {
+    const steps = [
+      {
+        key: 'created',
+        label: 'Created',
+        icon: Gift,
+        completed: true,
+        date: createdAt ? new Date(createdAt).toLocaleDateString() : null
+      },
+      {
+        key: 'accepted',
+        label: 'Accepted',
+        icon: CheckCircle2,
+        completed: ['accepted', 'in_transit', 'delivered'].includes(status),
+        date: null
+      },
+      {
+        key: 'in_transit',
+        label: 'In Transit',
+        icon: Truck,
+        completed: ['in_transit', 'delivered'].includes(status),
+        date: pickedUpAt ? new Date(pickedUpAt).toLocaleDateString() : null
+      },
+      {
+        key: 'delivered',
+        label: 'Delivered',
+        icon: CheckCircle2,
+        completed: status === 'delivered',
+        date: deliveredAt ? new Date(deliveredAt).toLocaleDateString() : null
+      },
+    ];
+
+    const currentStepIndex = steps.findIndex(step => step.key === status);
+
+    return (
+      <div className="w-full py-4">
+        <div className="flex items-center justify-between relative">
+          {/* Progress Line */}
+          <div className="absolute top-5 left-0 right-0 h-0.5 bg-muted mx-8">
+            <div
+              className="h-full bg-gradient-to-r from-[#ff6b35] to-[#ff8c42] transition-all duration-500"
+              style={{ width: `${(currentStepIndex / (steps.length - 1)) * 100}%` }}
+            />
+          </div>
+
+          {steps.map((step, index) => {
+            const Icon = step.icon;
+            const isActive = index === currentStepIndex;
+            const isCompleted = step.completed;
+
+            return (
+              <div key={step.key} className="flex flex-col items-center relative z-10">
+                <div className={`
+                  w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300
+                  ${isCompleted
+                    ? 'bg-gradient-to-r from-[#ff6b35] to-[#ff8c42] text-white shadow-lg shadow-orange-500/30'
+                    : isActive
+                      ? 'bg-primary/20 text-primary border-2 border-primary'
+                      : 'bg-muted text-muted-foreground'
+                  }
+                `}>
+                  {isCompleted ? (
+                    <CheckCircle2 className="w-5 h-5" />
+                  ) : (
+                    <Icon className="w-5 h-5" />
+                  )}
+                </div>
+                <span className={`
+                  mt-2 text-xs font-medium transition-colors
+                  ${isCompleted || isActive ? 'text-foreground' : 'text-muted-foreground'}
+                `}>
+                  {step.label}
+                </span>
+                {step.date && (
+                  <span className="text-[10px] text-muted-foreground mt-0.5">
+                    {step.date}
+                  </span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex items-center justify-center">
         <div className="text-center">
-          <Package className="w-12 h-12 text-primary mx-auto mb-4 animate-pulse" />
-          <p className="text-muted-foreground">Loading donation details...</p>
+          <div className="relative">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-[#ff6b35] to-[#ff8c42] flex items-center justify-center mx-auto mb-4 animate-pulse shadow-xl shadow-orange-500/20">
+              <Package className="w-8 h-8 text-white" />
+            </div>
+          </div>
+          <p className="text-muted-foreground font-medium">Loading donation details...</p>
         </div>
       </div>
     );
@@ -105,13 +218,17 @@ const DonationDetail = () => {
 
   if (!donation) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-muted-foreground">Donation not found</p>
-          <Button onClick={() => navigate(-1)} className="mt-4 rounded-xl">
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex items-center justify-center px-6">
+        <Card className="p-8 text-center max-w-sm border-2 border-dashed">
+          <AlertCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+          <h3 className="font-semibold text-lg mb-2">Donation Not Found</h3>
+          <p className="text-muted-foreground text-sm mb-6">
+            This donation may have been removed or doesn't exist.
+          </p>
+          <Button onClick={() => navigate(-1)} className="rounded-xl bg-gradient-to-r from-[#ff6b35] to-[#ff8c42] hover:from-[#ff8c42] hover:to-[#ff6b35]">
             Go Back
           </Button>
-        </div>
+        </Card>
       </div>
     );
   }
@@ -120,65 +237,147 @@ const DonationDetail = () => {
   const otherUserId = donation.donor_id === currentUser?.id ? donation.volunteer_id : donation.donor_id;
   const canRate = donation.status === "delivered" && otherUserId && !ratings.some(r => r.rated_by === currentUser?.id);
 
+  const handleShare = async () => {
+    try {
+      await navigator.share({
+        title: donation.title,
+        text: `Check out this donation: ${donation.title}`,
+        url: window.location.href,
+      });
+    } catch {
+      // Fallback to clipboard
+      navigator.clipboard.writeText(window.location.href);
+      toast({
+        title: "Link copied",
+        description: "Donation link copied to clipboard",
+      });
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-background">
-      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b px-6 py-4">
-        <div className="flex items-center justify-between max-w-4xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+      {/* Premium Header Bar */}
+      <div className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
+        <div className="flex items-center justify-between max-w-4xl mx-auto px-4 py-3">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => navigate(-1)}
-            className="rounded-xl"
+            className="rounded-xl hover:bg-muted/80 transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
-          <h1 className="text-xl font-bold">Donation Details</h1>
-          <div className="w-10" />
-        </div>
-      </div>
 
-      <div className="max-w-4xl mx-auto px-6 py-8 space-y-6">
-        {/* Header Card with gradient background inspired by the reference image */}
-        <Card className="p-6 bg-gradient-to-br from-primary/10 via-accent/10 to-secondary/10 border-none">
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <h2 className="text-2xl font-bold mb-2">{donation.title}</h2>
-              <Badge variant={
-                donation.status === "delivered" ? "default" :
-                donation.status === "in_transit" ? "secondary" :
-                donation.status === "accepted" ? "outline" : "secondary"
-              } className="rounded-full">
-                {donation.status.replace("_", " ").toUpperCase()}
-              </Badge>
-            </div>
+          <div className="flex items-center gap-2">
             <Badge variant={
-              donation.urgency === "urgent" ? "destructive" :
-              donation.urgency === "normal" ? "default" : "secondary"
-            } className="rounded-full">
-              {donation.urgency}
+              donation.status === "delivered" ? "default" :
+              donation.status === "in_transit" ? "secondary" :
+              donation.status === "accepted" ? "outline" : "secondary"
+            } className="rounded-full text-xs px-3 py-1">
+              {donation.status.replace("_", " ").toUpperCase()}
             </Badge>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 mt-6">
-            <div className="flex items-center gap-2 text-sm">
-              <Package className="w-4 h-4 text-primary" />
-              <span className="font-medium">{donation.food_type}</span>
-            </div>
-            <div className="flex items-center gap-2 text-sm">
-              <Clock className="w-4 h-4 text-primary" />
-              <span>{donation.pickup_time}</span>
-            </div>
-            <div className="flex items-center gap-2 text-sm col-span-2">
-              <MapPin className="w-4 h-4 text-primary" />
-              <span className="text-xs">{donation.pickup_address}, {donation.pickup_city}</span>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleShare}
+              className="rounded-xl hover:bg-muted/80 transition-colors"
+            >
+              <Share2 className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-xl hover:bg-muted/80 transition-colors"
+            >
+              <MoreHorizontal className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-4xl mx-auto px-4 py-6 space-y-6 pb-24">
+        {/* Hero Section with Title and Main Info */}
+        <div className="space-y-4">
+          <div className="flex items-start justify-between">
+            <div className="space-y-2">
+              <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{donation.title}</h1>
+              <div className="flex items-center gap-3 flex-wrap">
+                <Badge variant={
+                  donation.urgency === "urgent" ? "destructive" :
+                  donation.urgency === "normal" ? "default" : "secondary"
+                } className="rounded-full px-3 py-1">
+                  {donation.urgency === "urgent" && <AlertCircle className="w-3 h-3 mr-1" />}
+                  {donation.urgency}
+                </Badge>
+                <span className="text-sm text-muted-foreground">
+                  Posted {new Date(donation.created_at || "").toLocaleDateString()}
+                </span>
+              </div>
             </div>
           </div>
-        </Card>
+        </div>
 
-        {/* Timeline */}
-        <Card className="p-6">
-          <h3 className="font-semibold mb-4">Delivery Timeline</h3>
-          <DonationTimeline
+        {/* Quick Info Cards Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <Card className="p-4 bg-card/50 border-border/50 hover:bg-card/80 transition-colors">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center">
+                <Package className="w-5 h-5 text-orange-500" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Food Type</p>
+                <p className="font-semibold text-sm">{donation.food_type}</p>
+              </div>
+            </div>
+          </Card>
+
+          <Card className="p-4 bg-card/50 border-border/50 hover:bg-card/80 transition-colors">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
+                <Clock className="w-5 h-5 text-blue-500" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Pickup Time</p>
+                <p className="font-semibold text-sm">{donation.pickup_time}</p>
+              </div>
+            </div>
+          </Card>
+
+          <Card className="p-4 bg-card/50 border-border/50 hover:bg-card/80 transition-colors">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center">
+                <Calendar className="w-5 h-5 text-green-500" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Expires</p>
+                <p className="font-semibold text-sm">{new Date(donation.expiry_date).toLocaleDateString()}</p>
+              </div>
+            </div>
+          </Card>
+
+          <Card className="p-4 bg-card/50 border-border/50 hover:bg-card/80 transition-colors">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center">
+                <Gift className="w-5 h-5 text-purple-500" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Quantity</p>
+                <p className="font-semibold text-sm">{donation.quantity}</p>
+              </div>
+            </div>
+          </Card>
+        </div>
+
+        {/* Horizontal Timeline Stepper */}
+        <Card className="p-6 border-border/50">
+          <div className="flex items-center gap-2 mb-4">
+            <Truck className="w-5 h-5 text-primary" />
+            <h3 className="font-semibold">Delivery Progress</h3>
+          </div>
+          <HorizontalStepper
             status={donation.status}
             createdAt={donation.created_at || ""}
             pickedUpAt={donation.picked_up_at}
@@ -188,20 +387,44 @@ const DonationDetail = () => {
 
         {/* Tabs for Details, Chat, Ratings */}
         <Tabs defaultValue="details" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 rounded-xl">
-            <TabsTrigger value="details" className="rounded-xl">Details</TabsTrigger>
-            <TabsTrigger value="chat" className="rounded-xl">Chat</TabsTrigger>
-            <TabsTrigger value="ratings" className="rounded-xl">Ratings</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-3 rounded-2xl bg-muted/50 p-1 h-12">
+            <TabsTrigger
+              value="details"
+              className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all flex items-center gap-2"
+            >
+              <Package className="w-4 h-4" />
+              <span className="hidden sm:inline">Details</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="chat"
+              className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all flex items-center gap-2"
+            >
+              <MessageCircle className="w-4 h-4" />
+              <span className="hidden sm:inline">Chat</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="ratings"
+              className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all flex items-center gap-2"
+            >
+              <Star className="w-4 h-4" />
+              <span className="hidden sm:inline">Ratings</span>
+            </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="details" className="space-y-4 mt-4">
-            <Card className="p-6">
-              <h3 className="font-semibold mb-3">Description</h3>
-              <p className="text-muted-foreground whitespace-pre-wrap">{donation.description}</p>
+          <TabsContent value="details" className="space-y-4 mt-6">
+            {/* Description Card */}
+            <Card className="p-6 border-border/50">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Package className="w-4 h-4 text-primary" />
+                </div>
+                <h3 className="font-semibold">Description</h3>
+              </div>
+              <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed">{donation.description}</p>
             </Card>
 
             {/* Embedded Map Section */}
-            <Card className="p-6">
+            <Card className="p-6 border-border/50">
               <EmbeddedMap
                 latitude={donation.pickup_latitude}
                 longitude={donation.pickup_longitude}
@@ -210,44 +433,70 @@ const DonationDetail = () => {
               />
             </Card>
 
-            <Card className="p-6">
-              <h3 className="font-semibold mb-3">Additional Information</h3>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Quantity:</span>
-                  <span className="font-medium">{donation.quantity}</span>
+            {/* People Involved */}
+            <Card className="p-6 border-border/50">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <User className="w-4 h-4 text-primary" />
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Expiry Date:</span>
-                  <span className="font-medium">{new Date(donation.expiry_date).toLocaleDateString()}</span>
+                <h3 className="font-semibold">People Involved</h3>
+              </div>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-3 bg-muted/30 rounded-xl">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-orange-500/10 flex items-center justify-center">
+                      <span className="text-sm font-semibold text-orange-500">
+                        {donorProfile?.full_name?.charAt(0) || "D"}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="font-medium text-sm">{donorProfile?.full_name || "Unknown"}</p>
+                      <p className="text-xs text-muted-foreground">Donor</p>
+                    </div>
+                  </div>
+                  <Badge variant="outline" className="rounded-full text-xs">Donor</Badge>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Donor:</span>
-                  <span className="font-medium">{donorProfile?.full_name}</span>
-                </div>
+
                 {volunteerProfile && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Volunteer:</span>
-                    <span className="font-medium">{volunteerProfile.full_name}</span>
+                  <div className="flex items-center justify-between p-3 bg-muted/30 rounded-xl">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
+                        <span className="text-sm font-semibold text-blue-500">
+                          {volunteerProfile.full_name?.charAt(0) || "V"}
+                        </span>
+                      </div>
+                      <div>
+                        <p className="font-medium text-sm">{volunteerProfile.full_name}</p>
+                        <p className="text-xs text-muted-foreground">Volunteer</p>
+                      </div>
+                    </div>
+                    <Badge variant="outline" className="rounded-full text-xs">Volunteer</Badge>
                   </div>
                 )}
               </div>
             </Card>
 
+            {/* Delivery Photos */}
             {deliveryProofs.length > 0 && (
-              <Card className="p-6">
-                <h3 className="font-semibold mb-3">Delivery Photos</h3>
+              <Card className="p-6 border-border/50">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <ImageIcon className="w-4 h-4 text-primary" />
+                  </div>
+                  <h3 className="font-semibold">Delivery Photos</h3>
+                </div>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   {deliveryProofs.map((proof) => (
-                    <div key={proof.id} className="relative group">
+                    <div key={proof.id} className="relative group overflow-hidden rounded-xl">
                       <img
                         src={proof.image_url}
                         alt={`Delivery proof ${proof.proof_type}`}
-                        className="w-full h-32 object-cover rounded-xl border-2 border-primary/20 group-hover:scale-105 transition-transform"
+                        className="w-full h-32 object-cover group-hover:scale-110 transition-transform duration-300"
                       />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                       <Badge
                         variant="secondary"
-                        className="absolute top-2 right-2 rounded-xl text-xs"
+                        className="absolute bottom-2 left-2 rounded-lg text-xs bg-background/80 backdrop-blur-sm"
                       >
                         {proof.proof_type}
                       </Badge>
@@ -258,30 +507,34 @@ const DonationDetail = () => {
             )}
           </TabsContent>
 
-          <TabsContent value="chat" className="mt-4">
+          <TabsContent value="chat" className="mt-6">
             {otherUser && otherUserId ? (
-              <DonationMessaging
-                donationId={donation.id}
-                currentUserId={currentUser.id}
-                otherUserId={otherUserId}
-                otherUserName={otherUser.full_name}
-              />
+              <Card className="border-border/50 overflow-hidden">
+                <DonationMessaging
+                  donationId={donation.id}
+                  currentUserId={currentUser.id}
+                  otherUserId={otherUserId}
+                  otherUserName={otherUser.full_name}
+                />
+              </Card>
             ) : (
-              <Card className="p-8 text-center">
-                <p className="text-muted-foreground">
+              <Card className="p-8 text-center border-border/50 border-2 border-dashed">
+                <MessageCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-50" />
+                <h3 className="font-semibold mb-2">Chat Not Available</h3>
+                <p className="text-muted-foreground text-sm">
                   Chat will be available once a volunteer accepts this donation
                 </p>
               </Card>
             )}
           </TabsContent>
 
-          <TabsContent value="ratings" className="mt-4">
-            <Card className="p-6">
+          <TabsContent value="ratings" className="mt-6">
+            <Card className="p-6 border-border/50">
               {canRate && (
                 <div className="mb-6">
                   <Button
                     onClick={() => setShowRating(true)}
-                    className="w-full rounded-xl"
+                    className="w-full rounded-xl h-12 bg-gradient-to-r from-[#ff6b35] to-[#ff8c42] hover:from-[#ff8c42] hover:to-[#ff6b35] text-white shadow-lg shadow-orange-500/20"
                   >
                     <Star className="w-4 h-4 mr-2" />
                     Rate {otherUser?.full_name}
@@ -289,31 +542,39 @@ const DonationDetail = () => {
                 </div>
               )}
 
-              <h3 className="font-semibold mb-4">Reviews</h3>
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 rounded-lg bg-yellow-500/10 flex items-center justify-center">
+                  <Star className="w-4 h-4 text-yellow-500" />
+                </div>
+                <h3 className="font-semibold">Reviews</h3>
+              </div>
+
               {ratings.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">
-                  No ratings yet
-                </p>
+                <div className="text-center py-8">
+                  <Star className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-30" />
+                  <p className="text-muted-foreground text-sm">No ratings yet</p>
+                </div>
               ) : (
                 <div className="space-y-4">
                   {ratings.map((rating) => (
-                    <div key={rating.id} className="border rounded-xl p-4">
-                      <div className="flex items-center gap-2 mb-2">
+                    <div key={rating.id} className="p-4 bg-muted/30 rounded-xl">
+                      <div className="flex items-center gap-1 mb-3">
                         {Array.from({ length: 5 }).map((_, i) => (
                           <Star
                             key={i}
                             className={`w-4 h-4 ${
                               i < rating.rating
                                 ? "fill-yellow-400 text-yellow-400"
-                                : "text-muted-foreground"
+                                : "text-muted-foreground/30"
                             }`}
                           />
                         ))}
+                        <span className="ml-2 text-sm font-medium">{rating.rating}/5</span>
                       </div>
                       {rating.feedback && (
-                        <p className="text-sm text-muted-foreground">{rating.feedback}</p>
+                        <p className="text-sm text-muted-foreground leading-relaxed">{rating.feedback}</p>
                       )}
-                      <p className="text-xs text-muted-foreground mt-2">
+                      <p className="text-xs text-muted-foreground mt-3">
                         {new Date(rating.created_at || "").toLocaleDateString()}
                       </p>
                     </div>
@@ -324,6 +585,19 @@ const DonationDetail = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Fixed Bottom Action Bar for Volunteers */}
+      {donation.status === "pending" && donation.donor_id !== currentUser?.id && (
+        <div className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-xl border-t border-border/50 p-4 z-40">
+          <div className="max-w-4xl mx-auto">
+            <Button
+              className="w-full h-12 rounded-xl bg-gradient-to-r from-[#ff6b35] to-[#ff8c42] hover:from-[#ff8c42] hover:to-[#ff6b35] text-white shadow-lg shadow-orange-500/20 font-semibold"
+            >
+              Accept This Donation
+            </Button>
+          </div>
+        </div>
+      )}
 
       {otherUser && otherUserId && (
         <RatingSystem

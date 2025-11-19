@@ -88,7 +88,14 @@ export const AnalyticsDashboard = ({ userId, role }: { userId: string; role: str
   }, [userId, role]);
 
   if (loading) {
-    return <div className="text-center py-8 text-muted-foreground">Loading analytics...</div>;
+    return (
+      <div className="text-center py-12">
+        <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4 animate-pulse">
+          <TrendingUp className="w-6 h-6 text-primary" />
+        </div>
+        <p className="text-muted-foreground font-medium">Loading analytics...</p>
+      </div>
+    );
   }
 
   if (!analytics) return null;
@@ -96,11 +103,11 @@ export const AnalyticsDashboard = ({ userId, role }: { userId: string; role: str
   return (
     <div className="space-y-6">
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 gap-4">
-        <Card className="p-4">
+      <div className="grid grid-cols-2 gap-3">
+        <Card className="p-4 bg-gradient-to-br from-orange-500/10 to-orange-600/5 border-orange-200/50 dark:border-orange-800/30 hover:shadow-lg hover:shadow-orange-500/10 transition-all">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
-              <Package className="w-5 h-5 text-primary" />
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center shadow-lg shadow-orange-500/30">
+              <Package className="w-5 h-5 text-white" />
             </div>
             <div>
               <p className="text-2xl font-bold">{analytics.totalDonations}</p>
@@ -109,10 +116,10 @@ export const AnalyticsDashboard = ({ userId, role }: { userId: string; role: str
           </div>
         </Card>
 
-        <Card className="p-4">
+        <Card className="p-4 bg-gradient-to-br from-blue-500/10 to-blue-600/5 border-blue-200/50 dark:border-blue-800/30 hover:shadow-lg hover:shadow-blue-500/10 transition-all">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-chart-2/20 flex items-center justify-center">
-              <Users className="w-5 h-5 text-chart-2" />
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/30">
+              <Users className="w-5 h-5 text-white" />
             </div>
             <div>
               <p className="text-2xl font-bold">{analytics.peopleHelped}</p>
@@ -121,10 +128,10 @@ export const AnalyticsDashboard = ({ userId, role }: { userId: string; role: str
           </div>
         </Card>
 
-        <Card className="p-4">
+        <Card className="p-4 bg-gradient-to-br from-green-500/10 to-green-600/5 border-green-200/50 dark:border-green-800/30 hover:shadow-lg hover:shadow-green-500/10 transition-all">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-chart-3/20 flex items-center justify-center">
-              <Award className="w-5 h-5 text-chart-3" />
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-lg shadow-green-500/30">
+              <Award className="w-5 h-5 text-white" />
             </div>
             <div>
               <p className="text-2xl font-bold">{analytics.totalMeals}</p>
@@ -133,10 +140,10 @@ export const AnalyticsDashboard = ({ userId, role }: { userId: string; role: str
           </div>
         </Card>
 
-        <Card className="p-4">
+        <Card className="p-4 bg-gradient-to-br from-purple-500/10 to-purple-600/5 border-purple-200/50 dark:border-purple-800/30 hover:shadow-lg hover:shadow-purple-500/10 transition-all">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-chart-4/20 flex items-center justify-center">
-              <TrendingUp className="w-5 h-5 text-chart-4" />
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/30">
+              <TrendingUp className="w-5 h-5 text-white" />
             </div>
             <div>
               <p className="text-2xl font-bold">{analytics.wasteReduced}kg</p>
@@ -147,29 +154,46 @@ export const AnalyticsDashboard = ({ userId, role }: { userId: string; role: str
       </div>
 
       {/* Weekly Trend Chart */}
-      <Card className="p-4">
-        <h3 className="text-sm font-semibold mb-4">Weekly Activity</h3>
+      <Card className="p-5 border-border/50 hover:shadow-lg transition-shadow">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+            <TrendingUp className="w-4 h-4 text-primary" />
+          </div>
+          <h3 className="font-semibold">Weekly Activity</h3>
+        </div>
         <ResponsiveContainer width="100%" height={200}>
           <BarChart data={analytics.weeklyData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-            <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-            <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
-            <Tooltip 
-              contentStyle={{ 
-                backgroundColor: 'hsl(var(--card))', 
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.5} />
+            <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={11} tickLine={false} axisLine={false} />
+            <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} tickLine={false} axisLine={false} />
+            <Tooltip
+              contentStyle={{
+                backgroundColor: 'hsl(var(--card))',
                 border: '1px solid hsl(var(--border))',
-                borderRadius: '8px'
+                borderRadius: '12px',
+                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
               }}
             />
-            <Bar dataKey="donations" fill="hsl(var(--primary))" radius={[8, 8, 0, 0]} />
+            <Bar dataKey="donations" fill="url(#barGradient)" radius={[8, 8, 0, 0]} />
+            <defs>
+              <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#ff6b35" />
+                <stop offset="100%" stopColor="#ff8c42" />
+              </linearGradient>
+            </defs>
           </BarChart>
         </ResponsiveContainer>
       </Card>
 
       {/* Food Type Distribution */}
       {analytics.foodTypeData.length > 0 && (
-        <Card className="p-4">
-          <h3 className="text-sm font-semibold mb-4">Food Types</h3>
+        <Card className="p-5 border-border/50 hover:shadow-lg transition-shadow">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Package className="w-4 h-4 text-primary" />
+            </div>
+            <h3 className="font-semibold">Food Types</h3>
+          </div>
           <ResponsiveContainer width="100%" height={200}>
             <PieChart>
               <Pie
@@ -178,15 +202,24 @@ export const AnalyticsDashboard = ({ userId, role }: { userId: string; role: str
                 cy="50%"
                 labelLine={false}
                 label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                outerRadius={80}
+                outerRadius={70}
+                innerRadius={40}
                 fill="#8884d8"
                 dataKey="value"
+                paddingAngle={3}
               >
                 {analytics.foodTypeData.map((_, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: 'hsl(var(--card))',
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '12px',
+                  boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                }}
+              />
             </PieChart>
           </ResponsiveContainer>
         </Card>

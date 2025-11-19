@@ -5,10 +5,15 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from "@/hooks/useNotifications";
-import { Package, LogOut, CheckCircle, BarChart3, MessageCircle, Bell, Eye, Check, Upload, Home, Newspaper } from "lucide-react";
+import {
+  Package, LogOut, CheckCircle, BarChart3, MessageCircle, Bell, Eye, Check, Upload,
+  Home, Newspaper, MapPin, Clock, ChevronRight, Sparkles, Trophy, TrendingUp,
+  Calendar, Filter, Search, User, Settings
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { SwipeableCard } from "@/components/SwipeableCard";
 import { AnalyticsDashboard } from "@/components/AnalyticsDashboard";
@@ -34,6 +39,7 @@ const VolunteerDashboard = () => {
   const [selectedDonation, setSelectedDonation] = useState<Donation | null>(null);
   const [uploadProofDonation, setUploadProofDonation] = useState<Donation | null>(null);
   const [activeTab, setActiveTab] = useState("available");
+  const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState({
     search: "",
     foodType: "all",
@@ -41,7 +47,6 @@ const VolunteerDashboard = () => {
     urgency: "all",
     sortBy: "newest",
   });
-  
 
   const { notificationsEnabled, requestPermission, sendNotification } = useNotifications(profile?.id);
 
@@ -93,11 +98,7 @@ const VolunteerDashboard = () => {
       .channel("donations-changes")
       .on(
         "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "donations",
-        },
+        { event: "INSERT", schema: "public", table: "donations" },
         (payload) => {
           if (payload.new && (payload.new as any).status === "pending") {
             sendNotification(
@@ -110,14 +111,8 @@ const VolunteerDashboard = () => {
       )
       .on(
         "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "donations",
-        },
-        () => {
-          fetchData();
-        }
+        { event: "UPDATE", schema: "public", table: "donations" },
+        () => fetchData()
       )
       .subscribe();
 
@@ -129,12 +124,13 @@ const VolunteerDashboard = () => {
   useEffect(() => {
     let result = [...donations];
 
-    if (filters.search) {
+    if (filters.search || searchQuery) {
+      const query = (filters.search || searchQuery).toLowerCase();
       result = result.filter(
         (d) =>
-          d.title.toLowerCase().includes(filters.search.toLowerCase()) ||
-          d.description.toLowerCase().includes(filters.search.toLowerCase()) ||
-          d.pickup_city.toLowerCase().includes(filters.search.toLowerCase())
+          d.title.toLowerCase().includes(query) ||
+          d.description.toLowerCase().includes(query) ||
+          d.pickup_city.toLowerCase().includes(query)
       );
     }
 
@@ -166,7 +162,7 @@ const VolunteerDashboard = () => {
     }
 
     setFilteredDonations(result);
-  }, [donations, filters]);
+  }, [donations, filters, searchQuery]);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -180,10 +176,7 @@ const VolunteerDashboard = () => {
 
       const { error } = await supabase
         .from("donations")
-        .update({ 
-          status: "accepted",
-          volunteer_id: session.user.id 
-        })
+        .update({ status: "accepted", volunteer_id: session.user.id })
         .eq("id", id);
 
       if (error) throw error;
@@ -204,23 +197,19 @@ const VolunteerDashboard = () => {
   const handleUpdateStatus = async (id: string, status: string) => {
     try {
       const updates: any = { status };
-      
       if (status === "in_transit") {
         updates.picked_up_at = new Date().toISOString();
       } else if (status === "delivered") {
         updates.delivered_at = new Date().toISOString();
       }
 
-      const { error } = await supabase
-        .from("donations")
-        .update(updates)
-        .eq("id", id);
+      const { error } = await supabase.from("donations").update(updates).eq("id", id);
 
       if (error) throw error;
 
       toast({
         title: "Success",
-        description: `Status updated to ${status}`,
+        description: `Status updated to ${status.replace("_", " ")}`,
       });
     } catch (error: any) {
       toast({
@@ -234,9 +223,9 @@ const VolunteerDashboard = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading...</p>
+        <div className="text-center space-y-4">
+          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-muted-foreground font-medium">Loading your dashboard...</p>
         </div>
       </div>
     );
@@ -251,125 +240,230 @@ const VolunteerDashboard = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-cream/10 to-background pb-24">
-      <div className="px-6 py-8 max-w-md mx-auto">
-        {/* Modern Header with Logo */}
-        <Card className="p-6 mb-6 bg-gradient-glass backdrop-blur-xl border-2 border-glassBorder shadow-glass">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-slate-950 dark:to-slate-900 pb-24">
+      {/* Premium Header */}
+      <div className="sticky top-0 z-40 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl border-b border-slate-200 dark:border-slate-800">
+        <div className="px-6 py-4 max-w-lg mx-auto">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <img src={logo} alt="Logo" className="w-14 h-14 rounded-2xl" />
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <img src={logo} alt="Logo" className="w-12 h-12 rounded-2xl shadow-lg" />
+                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white dark:border-slate-950" />
+              </div>
               <div>
-                <h1 className="text-2xl font-bold">
-                  Hey, {profile?.full_name?.split(" ")[0]}! 🚀
+                <h1 className="text-xl font-bold text-slate-900 dark:text-white">
+                  Hey, {profile?.full_name?.split(" ")[0]}!
                 </h1>
-                <p className="text-sm text-muted-foreground">Volunteer dashboard</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                  <Sparkles className="w-3 h-3" />
+                  Volunteer
+                </p>
               </div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex items-center gap-2">
               {!notificationsEnabled && (
                 <Button
-                  variant="glass"
+                  variant="ghost"
                   size="icon"
                   onClick={requestPermission}
+                  className="rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800"
                 >
                   <Bell className="w-5 h-5" />
                 </Button>
               )}
               <ThemeToggle />
               <Button
-                variant="glass"
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate(`/profile/${profile?.id}`)}
+                className="rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800"
+              >
+                <User className="w-5 h-5" />
+              </Button>
+              <Button
+                variant="ghost"
                 size="icon"
                 onClick={handleSignOut}
+                className="rounded-xl hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950"
               >
                 <LogOut className="w-5 h-5" />
               </Button>
             </div>
           </div>
-        </Card>
+        </div>
+      </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 rounded-xl text-xs">
-            <TabsTrigger value="available">Available</TabsTrigger>
-            <TabsTrigger value="my-donations">Active</TabsTrigger>
-            <TabsTrigger value="completed">Past</TabsTrigger>
-            <TabsTrigger value="analytics">
+      {/* Main Content */}
+      <div className="px-6 py-6 max-w-lg mx-auto">
+        {/* Quick Stats */}
+        <div className="grid grid-cols-3 gap-3 mb-6">
+          <Card className="p-4 bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-950/50 dark:to-blue-900/30 border-blue-200/50 dark:border-blue-800/50">
+            <div className="flex flex-col items-center text-center">
+              <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center mb-2">
+                <Package className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              </div>
+              <span className="text-2xl font-bold text-slate-900 dark:text-white">
+                {pendingDonations.length}
+              </span>
+              <span className="text-xs text-slate-500 dark:text-slate-400">Available</span>
+            </div>
+          </Card>
+          <Card className="p-4 bg-gradient-to-br from-amber-50 to-amber-100/50 dark:from-amber-950/50 dark:to-amber-900/30 border-amber-200/50 dark:border-amber-800/50">
+            <div className="flex flex-col items-center text-center">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center mb-2">
+                <TrendingUp className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+              </div>
+              <span className="text-2xl font-bold text-slate-900 dark:text-white">
+                {myAcceptedDonations.length}
+              </span>
+              <span className="text-xs text-slate-500 dark:text-slate-400">Active</span>
+            </div>
+          </Card>
+          <Card className="p-4 bg-gradient-to-br from-green-50 to-green-100/50 dark:from-green-950/50 dark:to-green-900/30 border-green-200/50 dark:border-green-800/50">
+            <div className="flex flex-col items-center text-center">
+              <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center mb-2">
+                <Trophy className="w-5 h-5 text-green-600 dark:text-green-400" />
+              </div>
+              <span className="text-2xl font-bold text-slate-900 dark:text-white">
+                {completedDonations.length}
+              </span>
+              <span className="text-xs text-slate-500 dark:text-slate-400">Completed</span>
+            </div>
+          </Card>
+        </div>
+
+        {/* Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+          <TabsList className="grid w-full grid-cols-5 bg-slate-100 dark:bg-slate-800/50 p-1 rounded-2xl">
+            <TabsTrigger value="available" className="rounded-xl text-xs font-medium data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:shadow-sm">
+              Available
+            </TabsTrigger>
+            <TabsTrigger value="my-donations" className="rounded-xl text-xs font-medium data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:shadow-sm">
+              Active
+            </TabsTrigger>
+            <TabsTrigger value="completed" className="rounded-xl text-xs font-medium data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:shadow-sm">
+              Past
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="rounded-xl text-xs font-medium data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:shadow-sm">
               <BarChart3 className="w-4 h-4" />
             </TabsTrigger>
-            <TabsTrigger value="community">Community</TabsTrigger>
+            <TabsTrigger value="community" className="rounded-xl text-xs font-medium data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:shadow-sm">
+              Community
+            </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="available" className="space-y-4">
+          {/* Available Donations Tab */}
+          <TabsContent value="available" className="space-y-4 mt-4">
+            {/* Search Bar */}
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Input
+                placeholder="Search donations..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-11 h-12 bg-white dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 rounded-2xl focus:ring-2 focus:ring-primary/20"
+              />
+            </div>
+
             <DonationFilters filters={filters} onFiltersChange={setFilters} />
-            
+
             {pendingDonations.length === 0 ? (
-              <Card className="p-8 text-center">
-                <Package className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                <p className="text-muted-foreground">
-                  {donations.filter(d => d.status === "pending").length === 0 
-                    ? "No pending donations" 
-                    : "No donations match your filters"}
+              <Card className="p-12 text-center bg-white dark:bg-slate-800/50 border-dashed border-2 border-slate-200 dark:border-slate-700 rounded-3xl">
+                <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <Package className="w-8 h-8 text-slate-400" />
+                </div>
+                <h3 className="font-semibold text-slate-900 dark:text-white mb-1">No donations available</h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  {donations.filter(d => d.status === "pending").length === 0
+                    ? "Check back later for new donations"
+                    : "Try adjusting your filters"}
                 </p>
               </Card>
             ) : (
-              pendingDonations.map((donation) => (
-                <SwipeableCard
-                  key={donation.id}
-                  onSwipeRight={() => handleAccept(donation.id)}
-                  rightAction={<Check className="w-6 h-6" />}
-                  leftAction={null}
-                >
-                  <Card className="p-5 bg-gradient-card backdrop-blur-xl border-2 border-glassBorder shadow-soft hover:shadow-glass transition-all duration-300">
-                    <div className="flex gap-4 mb-4">
-                      <div className="flex-shrink-0 w-16 h-16 rounded-2xl bg-primary/20 flex items-center justify-center">
-                        <Package className="w-8 h-8 text-primary" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-semibold">{donation.title}</h3>
-                          {donation.urgency === "urgent" && (
-                            <Badge variant="destructive" className="text-xs rounded-full">Urgent</Badge>
-                          )}
+              <div className="space-y-3">
+                {pendingDonations.map((donation) => (
+                  <SwipeableCard
+                    key={donation.id}
+                    onSwipeRight={() => handleAccept(donation.id)}
+                    rightAction={<Check className="w-6 h-6" />}
+                    leftAction={null}
+                  >
+                    <Card className="p-4 bg-white dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 hover:border-primary/50 hover:shadow-lg transition-all duration-300 rounded-2xl cursor-pointer group">
+                      <div className="flex gap-4">
+                        <div className="flex-shrink-0 w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
+                          <Package className="w-7 h-7 text-primary" />
                         </div>
-                        <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
-                          {donation.description}
-                        </p>
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <span>{donation.food_type}</span>
-                          <span>•</span>
-                          <span>{donation.quantity}</span>
-                          <span>•</span>
-                          <span>{donation.pickup_city}</span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between mb-2">
+                            <div>
+                              <h3 className="font-semibold text-slate-900 dark:text-white group-hover:text-primary transition-colors">
+                                {donation.title}
+                              </h3>
+                              <div className="flex items-center gap-2 mt-1">
+                                {donation.urgency === "urgent" && (
+                                  <Badge variant="destructive" className="text-[10px] px-2 py-0 rounded-full">
+                                    Urgent
+                                  </Badge>
+                                )}
+                                <Badge variant="secondary" className="text-[10px] px-2 py-0 rounded-full bg-slate-100 dark:bg-slate-700">
+                                  {donation.food_type}
+                                </Badge>
+                              </div>
+                            </div>
+                            <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                          </div>
+                          <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-1 mb-3">
+                            {donation.description}
+                          </p>
+                          <div className="flex items-center gap-4 text-xs text-slate-400">
+                            <span className="flex items-center gap-1">
+                              <MapPin className="w-3 h-3" />
+                              {donation.pickup_city}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Clock className="w-3 h-3" />
+                              {donation.pickup_time}
+                            </span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        onClick={() => navigate(`/donation/${donation.id}`)}
-                        variant="outline"
-                        className="flex-1 rounded-xl"
-                      >
-                        <Eye className="w-4 h-4 mr-2" />
-                        View Details
-                      </Button>
-                      <Button
-                        onClick={() => handleAccept(donation.id)}
-                        className="flex-1 rounded-xl"
-                      >
-                        <CheckCircle className="w-4 h-4 mr-2" />
-                        Accept
-                      </Button>
-                    </div>
-                  </Card>
-                </SwipeableCard>
-              ))
+                      <div className="flex gap-2 mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
+                        <Button
+                          onClick={() => navigate(`/donation/${donation.id}`)}
+                          variant="outline"
+                          size="sm"
+                          className="flex-1 rounded-xl h-10 text-sm"
+                        >
+                          <Eye className="w-4 h-4 mr-2" />
+                          Details
+                        </Button>
+                        <Button
+                          onClick={() => handleAccept(donation.id)}
+                          size="sm"
+                          className="flex-1 rounded-xl h-10 text-sm bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
+                        >
+                          <CheckCircle className="w-4 h-4 mr-2" />
+                          Accept
+                        </Button>
+                      </div>
+                    </Card>
+                  </SwipeableCard>
+                ))}
+              </div>
             )}
           </TabsContent>
 
-          <TabsContent value="my-donations" className="space-y-4">
+          {/* Active Donations Tab */}
+          <TabsContent value="my-donations" className="space-y-3 mt-4">
             {myAcceptedDonations.length === 0 ? (
-              <Card className="p-8 text-center">
-                <Package className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                <p className="text-muted-foreground">No active donations</p>
+              <Card className="p-12 text-center bg-white dark:bg-slate-800/50 border-dashed border-2 border-slate-200 dark:border-slate-700 rounded-3xl">
+                <div className="w-16 h-16 bg-amber-100 dark:bg-amber-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <TrendingUp className="w-8 h-8 text-amber-500" />
+                </div>
+                <h3 className="font-semibold text-slate-900 dark:text-white mb-1">No active pickups</h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  Accept a donation to get started
+                </p>
               </Card>
             ) : (
               myAcceptedDonations.map((donation) => (
@@ -386,18 +480,21 @@ const VolunteerDashboard = () => {
                   leftAction={null}
                   disabled={donation.status === "delivered"}
                 >
-                  <Card className="p-5 bg-gradient-card backdrop-blur-xl border-2 border-glassBorder shadow-soft">
+                  <Card className="p-4 bg-white dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 rounded-2xl">
                     <div className="flex gap-4 mb-4">
-                      <div className="flex-shrink-0 w-16 h-16 rounded-2xl bg-primary/20 flex items-center justify-center">
-                        <Package className="w-8 h-8 text-primary" />
+                      <div className="flex-shrink-0 w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-100 to-amber-50 dark:from-amber-900/30 dark:to-amber-800/20 flex items-center justify-center">
+                        <Package className="w-7 h-7 text-amber-600" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between mb-2">
-                          <h3 className="font-semibold">{donation.title}</h3>
-                          <Badge className="rounded-full">{donation.status.replace("_", " ")}</Badge>
+                        <div className="flex items-start justify-between mb-1">
+                          <h3 className="font-semibold text-slate-900 dark:text-white">{donation.title}</h3>
+                          <Badge className="rounded-full text-[10px] px-2">
+                            {donation.status.replace("_", " ")}
+                          </Badge>
                         </div>
-                        <p className="text-sm text-muted-foreground mb-2">
-                          {donation.pickup_address}, {donation.pickup_city}
+                        <p className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                          <MapPin className="w-3 h-3" />
+                          {donation.pickup_city}
                         </p>
                       </div>
                     </div>
@@ -409,14 +506,15 @@ const VolunteerDashboard = () => {
                       deliveredAt={donation.delivered_at}
                     />
 
-                    <div className="flex gap-2 mt-4">
+                    <div className="flex gap-2 mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
                       {donation.status === "accepted" && (
                         <Button
                           onClick={() => handleUpdateStatus(donation.id, "in_transit")}
                           variant="outline"
-                          className="flex-1"
+                          size="sm"
+                          className="flex-1 rounded-xl h-10"
                         >
-                          Mark as In Transit
+                          Start Pickup
                         </Button>
                       )}
                       {donation.status === "in_transit" && (
@@ -424,14 +522,16 @@ const VolunteerDashboard = () => {
                           <Button
                             onClick={() => setUploadProofDonation(donation)}
                             variant="outline"
-                            className="flex-1"
+                            size="sm"
+                            className="flex-1 rounded-xl h-10"
                           >
                             <Upload className="w-4 h-4 mr-2" />
-                            Upload Photo
+                            Photo
                           </Button>
                           <Button
                             onClick={() => handleUpdateStatus(donation.id, "delivered")}
-                            className="flex-1"
+                            size="sm"
+                            className="flex-1 rounded-xl h-10"
                           >
                             Complete
                           </Button>
@@ -441,6 +541,7 @@ const VolunteerDashboard = () => {
                         variant="outline"
                         size="icon"
                         onClick={() => navigate(`/donation/${donation.id}`)}
+                        className="rounded-xl h-10 w-10"
                       >
                         <Eye className="w-4 h-4" />
                       </Button>
@@ -448,6 +549,7 @@ const VolunteerDashboard = () => {
                         variant="outline"
                         size="icon"
                         onClick={() => setSelectedDonation(donation)}
+                        className="rounded-xl h-10 w-10"
                       >
                         <MessageCircle className="w-4 h-4" />
                       </Button>
@@ -458,130 +560,128 @@ const VolunteerDashboard = () => {
             )}
           </TabsContent>
 
-          <TabsContent value="completed" className="space-y-4">
+          {/* Completed Tab */}
+          <TabsContent value="completed" className="space-y-3 mt-4">
             {completedDonations.length === 0 ? (
-              <Card className="p-8 text-center">
-                <Package className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                <p className="text-muted-foreground">No completed donations yet</p>
+              <Card className="p-12 text-center bg-white dark:bg-slate-800/50 border-dashed border-2 border-slate-200 dark:border-slate-700 rounded-3xl">
+                <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <Trophy className="w-8 h-8 text-green-500" />
+                </div>
+                <h3 className="font-semibold text-slate-900 dark:text-white mb-1">No completed deliveries</h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  Your completed pickups will appear here
+                </p>
               </Card>
             ) : (
               completedDonations.map((donation) => (
-                <Card key={donation.id} className="p-4 opacity-75">
-                  <div className="flex justify-between items-start mb-3">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <h3 className="font-semibold">{donation.title}</h3>
-                        <Badge variant="secondary" className="rounded-full">Completed</Badge>
+                <Card
+                  key={donation.id}
+                  className="p-4 bg-white dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 rounded-2xl hover:shadow-md transition-all cursor-pointer group"
+                  onClick={() => navigate(`/donation/${donation.id}`)}
+                >
+                  <div className="flex gap-4">
+                    <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                      <CheckCircle className="w-6 h-6 text-green-500" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between mb-1">
+                        <h3 className="font-semibold text-slate-900 dark:text-white group-hover:text-primary transition-colors">
+                          {donation.title}
+                        </h3>
+                        <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-primary group-hover:translate-x-1 transition-all" />
                       </div>
-                      <p className="text-sm text-muted-foreground mb-2">
-                        {donation.pickup_address}, {donation.pickup_city}
-                      </p>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-xs text-muted-foreground">{donation.food_type}</span>
-                        <span className="text-xs text-muted-foreground">•</span>
-                        <span className="text-xs text-muted-foreground">{donation.quantity}</span>
-                        <span className="text-xs text-muted-foreground">•</span>
-                        <span className="text-xs text-muted-foreground">
+                      <div className="flex items-center gap-3 text-xs text-slate-400">
+                        <span className="flex items-center gap-1">
+                          <MapPin className="w-3 h-3" />
+                          {donation.pickup_city}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Calendar className="w-3 h-3" />
                           {new Date(donation.delivered_at || "").toLocaleDateString()}
                         </span>
                       </div>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => navigate(`/donation/${donation.id}`)}
-                      className="rounded-xl"
-                    >
-                      <Eye className="w-4 h-4" />
-                    </Button>
                   </div>
                 </Card>
               ))
             )}
           </TabsContent>
 
-          <TabsContent value="analytics" className="space-y-6">
+          {/* Analytics Tab */}
+          <TabsContent value="analytics" className="space-y-6 mt-4">
             <AnalyticsDashboard userId={profile?.id || ""} role="volunteer" />
             <AchievementBadges userId={profile?.id || ""} />
           </TabsContent>
 
-          <TabsContent value="community" className="space-y-6">
+          {/* Community Tab */}
+          <TabsContent value="community" className="space-y-6 mt-4">
             <Leaderboard type="volunteer" />
             <Leaderboard type="donor" />
           </TabsContent>
         </Tabs>
+      </div>
 
-        <Dialog open={!!selectedDonation} onOpenChange={() => setSelectedDonation(null)}>
-          <DialogContent className="max-w-md bg-gradient-card backdrop-blur-xl border-2 border-glassBorder">
-            <DialogHeader>
-              <DialogTitle>Message Donor</DialogTitle>
-            </DialogHeader>
-            {selectedDonation && (
-              <DonationMessaging
-                donationId={selectedDonation.id}
-                currentUserId={profile?.id || ""}
-                otherUserId={selectedDonation.donor_id}
-                otherUserName="Donor"
-              />
-            )}
-          </DialogContent>
-        </Dialog>
+      {/* Dialogs */}
+      <Dialog open={!!selectedDonation} onOpenChange={() => setSelectedDonation(null)}>
+        <DialogContent className="max-w-md rounded-3xl">
+          <DialogHeader>
+            <DialogTitle>Message Donor</DialogTitle>
+          </DialogHeader>
+          {selectedDonation && (
+            <DonationMessaging
+              donationId={selectedDonation.id}
+              currentUserId={profile?.id || ""}
+              otherUserId={selectedDonation.donor_id}
+              otherUserName="Donor"
+            />
+          )}
+        </DialogContent>
+      </Dialog>
 
-        <Dialog open={!!uploadProofDonation} onOpenChange={() => setUploadProofDonation(null)}>
-          <DialogContent className="max-w-md bg-gradient-card backdrop-blur-xl border-2 border-glassBorder">
-            <DialogHeader>
-              <DialogTitle>Upload Delivery Proof</DialogTitle>
-            </DialogHeader>
-            {uploadProofDonation && (
-              <DeliveryProofUpload
-                donationId={uploadProofDonation.id}
-                userId={profile?.id || ""}
-                onSuccess={() => {
-                  setUploadProofDonation(null);
-                  toast({
-                    title: "Success!",
-                    description: "Delivery proof uploaded successfully",
-                  });
-                }}
-              />
-            )}
-          </DialogContent>
-        </Dialog>
-        
-        <div className="fixed bottom-0 inset-x-0 z-50 border-t bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-          <div className="mx-auto max-w-md px-4 py-2 grid grid-cols-4 gap-2">
-            <Button
-              variant={activeTab === "available" ? "default" : "outline"}
-              onClick={() => setActiveTab("available")}
-              className="flex flex-col items-center gap-1 py-2"
-            >
-              <Home className="w-4 h-4" />
-              <span className="text-xs">Browse</span>
-            </Button>
-            <Button
-              variant={activeTab === "my-donations" ? "default" : "outline"}
-              onClick={() => setActiveTab("my-donations")}
-              className="flex flex-col items-center gap-1 py-2"
-            >
-              <CheckCircle className="w-4 h-4" />
-              <span className="text-xs">Active</span>
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => navigate("/feed")}
-              className="flex flex-col items-center gap-1 py-2"
-            >
-              <Newspaper className="w-4 h-4" />
-              <span className="text-xs">Feed</span>
-            </Button>
-            <Button
-              variant={activeTab === "analytics" ? "default" : "outline"}
-              onClick={() => setActiveTab("analytics")}
-              className="flex flex-col items-center gap-1 py-2"
-            >
-              <BarChart3 className="w-4 h-4" />
-              <span className="text-xs">Stats</span>
-            </Button>
+      <Dialog open={!!uploadProofDonation} onOpenChange={() => setUploadProofDonation(null)}>
+        <DialogContent className="max-w-md rounded-3xl">
+          <DialogHeader>
+            <DialogTitle>Upload Delivery Proof</DialogTitle>
+          </DialogHeader>
+          {uploadProofDonation && (
+            <DeliveryProofUpload
+              donationId={uploadProofDonation.id}
+              userId={profile?.id || ""}
+              onSuccess={() => {
+                setUploadProofDonation(null);
+                toast({
+                  title: "Success!",
+                  description: "Delivery proof uploaded successfully",
+                });
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Modern Bottom Navigation */}
+      <div className="fixed bottom-0 inset-x-0 z-50 bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl border-t border-slate-200 dark:border-slate-800 safe-area-pb">
+        <div className="mx-auto max-w-lg px-6 py-3">
+          <div className="grid grid-cols-4 gap-2">
+            {[
+              { id: "available", icon: Home, label: "Browse" },
+              { id: "my-donations", icon: CheckCircle, label: "Active" },
+              { id: "feed", icon: Newspaper, label: "Feed", isNavigation: true },
+              { id: "analytics", icon: BarChart3, label: "Stats" },
+            ].map((item) => (
+              <button
+                key={item.id}
+                onClick={() => item.isNavigation ? navigate("/feed") : setActiveTab(item.id)}
+                className={`flex flex-col items-center gap-1 py-2 px-3 rounded-xl transition-all ${
+                  activeTab === item.id && !item.isNavigation
+                    ? "bg-primary text-white shadow-lg shadow-primary/30"
+                    : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
+                }`}
+              >
+                <item.icon className="w-5 h-5" />
+                <span className="text-[10px] font-medium">{item.label}</span>
+              </button>
+            ))}
           </div>
         </div>
       </div>
