@@ -41,6 +41,7 @@ const CreateDonation = () => {
     pickupTime: "",
     pickupLatitude: null as number | null,
     pickupLongitude: null as number | null,
+    mapLink: "",
   });
 
   const foodTypes = [
@@ -56,12 +57,13 @@ const CreateDonation = () => {
     setAnonymous(params.get("anonymous") === "true");
   }, []);
 
-  const handleLocationSelect = (lat: number, lng: number, address: string) => {
+  const handleLocationSelect = (lat: number, lng: number, address: string, mapLink: string) => {
     setFormData({
       ...formData,
       pickupLatitude: lat,
       pickupLongitude: lng,
       pickupAddress: address,
+      mapLink: mapLink,
     });
   };
 
@@ -100,11 +102,16 @@ const CreateDonation = () => {
         return;
       }
 
+      // Add map link to description if available
+      const descriptionWithMap = formData.mapLink
+        ? `${formData.description}\n\n📍 Location: ${formData.mapLink}`
+        : formData.description;
+
       const { error } = await supabase.from("donations").insert({
         donor_id: anonymous ? null : donorId,
-        is_anonymous: anonymous,
+        // is_anonymous: anonymous, // Temporarily disabled until migration is run
         title: anonymous ? `[Anonymous] ${formData.title}` : formData.title,
-        description: formData.description,
+        description: descriptionWithMap,
         food_type: formData.foodType,
         quantity: formData.quantity,
         urgency: formData.urgency,
@@ -256,6 +263,7 @@ const CreateDonation = () => {
           <LocationPicker
             onLocationSelect={handleLocationSelect}
             currentAddress={formData.pickupAddress}
+            currentMapLink={formData.mapLink}
           />
 
           <div className="space-y-2">

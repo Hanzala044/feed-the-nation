@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DonationTimeline } from "@/components/DonationTimeline";
 import { DonationMessaging } from "@/components/DonationMessaging";
 import { RatingSystem } from "@/components/RatingSystem";
+import { EmbeddedMap } from "@/components/EmbeddedMap";
 import { ArrowLeft, Clock, MapPin, Package, Star } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { Database } from "@/integrations/supabase/types";
@@ -196,7 +197,17 @@ const DonationDetail = () => {
           <TabsContent value="details" className="space-y-4 mt-4">
             <Card className="p-6">
               <h3 className="font-semibold mb-3">Description</h3>
-              <p className="text-muted-foreground">{donation.description}</p>
+              <p className="text-muted-foreground whitespace-pre-wrap">{donation.description}</p>
+            </Card>
+
+            {/* Embedded Map Section */}
+            <Card className="p-6">
+              <EmbeddedMap
+                latitude={donation.pickup_latitude}
+                longitude={donation.pickup_longitude}
+                address={donation.pickup_address}
+                city={donation.pickup_city}
+              />
             </Card>
 
             <Card className="p-6">
