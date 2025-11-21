@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { authClient } from "@/integrations/supabase/authClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -83,7 +84,7 @@ const CreateDonation = () => {
         return;
       }
 
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session } } = await authClient.auth.getSession();
 
       let donorId: string | null = session?.user?.id || null;
       if (!donorId && anonymous) {
@@ -102,23 +103,53 @@ const CreateDonation = () => {
         return;
       }
 
+      // Check if profile is complete (non-anonymous users must have phone)
+      if (!anonymous && donorId) {
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("phone, full_name")
+          .eq("id", donorId)
+          .single();
+
+        if (!profileData?.phone || !profileData?.full_name) {
+          toast({
+            title: "Profile Incomplete",
+            description: "Please complete your profile with phone number before creating a donation",
+            variant: "destructive",
+          });
+          navigate("/donor/edit-profile");
+          return;
+        }
+      }
+
       // Add map link to description if available
       const descriptionWithMap = formData.mapLink
         ? `${formData.description}\n\n📍 Location: ${formData.mapLink}`
         : formData.description;
 
+      // Use today's date for pickup time (since we only collect time)
+      const today = new Date().toISOString().split('T')[0];
+      const pickupDateTime = formData.pickupTime
+        ? `${today}T${formData.pickupTime}`
+        : null;
+
+      // Format expiry date as timestamp
+      const expiryDateTime = formData.expiryDate
+        ? `${formData.expiryDate}T23:59:59`
+        : null;
+
       const { error } = await supabase.from("donations").insert({
         donor_id: anonymous ? null : donorId,
-        // is_anonymous: anonymous, // Temporarily disabled until migration is run
+        is_anonymous: anonymous,
         title: anonymous ? `[Anonymous] ${formData.title}` : formData.title,
         description: descriptionWithMap,
         food_type: formData.foodType,
         quantity: formData.quantity,
         urgency: formData.urgency,
-        expiry_date: formData.expiryDate,
+        expiry_date: expiryDateTime,
         pickup_address: formData.pickupAddress,
         pickup_city: formData.pickupCity,
-        pickup_time: formData.pickupTime,
+        pickup_time: pickupDateTime,
         pickup_latitude: formData.pickupLatitude,
         pickup_longitude: formData.pickupLongitude,
         status: "pending",
@@ -279,7 +310,7 @@ const CreateDonation = () => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="pickupTime">Pickup Time</Label>
+            <Label htmlFor="pickupTime">Pickup Time (Today)</Label>
             <Input
               id="pickupTime"
               type="time"
@@ -288,6 +319,9 @@ const CreateDonation = () => {
               className="h-12 rounded-xl"
               required
             />
+            <p className="text-xs text-muted-foreground">
+              Select the time when volunteers can pick up the donation today
+            </p>
           </div>
 
           <Button

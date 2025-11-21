@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { authClient } from "@/integrations/supabase/authClient";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
@@ -62,7 +63,7 @@ const DonorDashboard = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session } } = await authClient.auth.getSession();
         if (!session) {
           navigate("/auth");
           return;
@@ -106,25 +107,6 @@ const DonorDashboard = () => {
     };
 
     fetchData();
-
-    const channel = supabase
-      .channel("donations-changes")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "donations",
-        },
-        () => {
-          fetchData();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
   }, [navigate, toast]);
 
   useEffect(() => {
@@ -170,7 +152,7 @@ const DonorDashboard = () => {
   }, [donations, filters]);
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
+    await authClient.auth.signOut();
     navigate("/");
   };
 
@@ -336,6 +318,14 @@ const DonorDashboard = () => {
                 </Button>
               )}
               <ThemeToggle />
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate("/donor/edit-profile")}
+                className="rounded-xl h-9 w-9 hover:bg-muted/80"
+              >
+                <Users className="w-4 h-4" />
+              </Button>
               <Button
                 variant="ghost"
                 size="icon"

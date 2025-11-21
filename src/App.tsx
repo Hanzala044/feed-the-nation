@@ -14,7 +14,9 @@ import NotFound from "./pages/NotFound";
 const DonorDashboard = lazy(() => import("./pages/donor/DonorDashboard"));
 const CreateDonation = lazy(() => import("./pages/donor/CreateDonation"));
 const EditDonation = lazy(() => import("./pages/donor/EditDonation"));
+const EditDonorProfile = lazy(() => import("./pages/donor/EditProfile"));
 const VolunteerDashboard = lazy(() => import("./pages/volunteer/VolunteerDashboard"));
+const EditVolunteerProfile = lazy(() => import("./pages/volunteer/EditProfile"));
 const DonationDetail = lazy(() => import("./pages/DonationDetail"));
 const Profile = lazy(() => import("./pages/Profile"));
 const PublicFeed = lazy(() => import("./pages/PublicFeed"));
@@ -55,7 +57,9 @@ const App = () => (
               <Route path="/donor/dashboard" element={<DonorDashboard />} />
               <Route path="/donor/create-donation" element={<CreateDonation />} />
               <Route path="/donor/edit-donation/:id" element={<EditDonation />} />
+              <Route path="/donor/edit-profile" element={<EditDonorProfile />} />
               <Route path="/volunteer/dashboard" element={<VolunteerDashboard />} />
+              <Route path="/volunteer/edit-profile" element={<EditVolunteerProfile />} />
               <Route path="/donation/:id" element={<DonationDetail />} />
               <Route path="/profile/:userId?" element={<Profile />} />
               <Route path="/feed" element={<PublicFeed />} />

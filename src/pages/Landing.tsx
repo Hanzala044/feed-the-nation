@@ -175,7 +175,7 @@ const Landing = () => {
             </div>
 
             {/* Right Hero Image */}
-            <div className="relative lg:block">
+            <div className="relative hidden lg:block">
               <div className="relative aspect-[3/4] rounded-3xl overflow-hidden shadow-2xl">
                 {/* Hero Image - Using placeholder, replace with actual food donation image */}
                 <div className="absolute inset-0 bg-gradient-to-br from-[#ff6b35] via-purple-500 to-blue-500">
@@ -189,7 +189,7 @@ const Landing = () => {
                   </div>
                 </div>
 
-                {/* Floating Cards */}
+                {/* Floating Cards - Desktop Only */}
                 <div className="absolute bottom-8 left-8 right-8 z-20 space-y-3">
                   <div
                     className="bg-white/10 dark:bg-white/10 light:bg-white/90 backdrop-blur-xl border border-white/20 dark:border-white/20 light:border-slate-200 rounded-2xl p-4 shadow-xl"
@@ -268,15 +268,15 @@ const Landing = () => {
             </div>
 
             <div className="text-center space-y-4">
-              <h2 className="text-2xl font-bold text-white dark:text-white light:text-slate-900 leading-tight">
-                In presence of our team FOOD 4 U
+              <h2 className="text-3xl font-bold text-white dark:text-white light:text-slate-900 leading-tight">
+                FOOD 4 U
               </h2>
-              <p className="text-xl font-semibold text-white/90 dark:text-white/90 light:text-slate-700 leading-relaxed">
-                Inshallah no one will sleep hungry Inshallah.
+              <p className="text-xl font-semibold bg-gradient-to-r from-[#ff6b35] via-[#ff8c42] to-purple-500 bg-clip-text text-transparent leading-relaxed">
+                Made with ❤️ for a hunger-free KARNATAKA
               </p>
               <div className="pt-4 border-t border-white/20 dark:border-white/20 light:border-slate-300">
-                <p className="text-base text-white/70 dark:text-white/70 light:text-slate-600 italic">
-                  - by HANZALA & FOOD 4 U
+                <p className="text-sm text-white/70 dark:text-white/70 light:text-slate-600">
+                  Where Technology Meets Compassion
                 </p>
               </div>
             </div>

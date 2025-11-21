@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { authClient } from "@/integrations/supabase/authClient";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
@@ -47,13 +48,14 @@ const VolunteerDashboard = () => {
     urgency: "all",
     sortBy: "newest",
   });
+  const [lastDonationCount, setLastDonationCount] = useState(0);
 
   const { notificationsEnabled, requestPermission, sendNotification } = useNotifications(profile?.id);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session } } = await authClient.auth.getSession();
         if (!session) {
           navigate("/auth");
           return;
@@ -78,6 +80,16 @@ const VolunteerDashboard = () => {
           .order("created_at", { ascending: false });
 
         if (donationsData) {
+          // Check for new donations and send notification
+          const pendingDonations = donationsData.filter(d => d.status === "pending");
+          if (lastDonationCount > 0 && pendingDonations.length > lastDonationCount) {
+            const newDonation = pendingDonations[0];
+            sendNotification(
+              "🍽️ New Donation Available!",
+              `${newDonation.title} needs pickup - ${newDonation.urgency === "urgent" ? "⚡ URGENT" : "📦"}`
+            );
+          }
+          setLastDonationCount(pendingDonations.length);
           setDonations(donationsData);
           setFilteredDonations(donationsData);
         }
@@ -94,32 +106,15 @@ const VolunteerDashboard = () => {
 
     fetchData();
 
-    const channel = supabase
-      .channel("donations-changes")
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "donations" },
-        (payload) => {
-          if (payload.new && (payload.new as any).status === "pending") {
-            sendNotification(
-              "New Donation Available!",
-              `${(payload.new as any).title} is available for pickup`
-            );
-          }
-          fetchData();
-        }
-      )
-      .on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "donations" },
-        () => fetchData()
-      )
-      .subscribe();
+    // Poll for new donations every 30 seconds instead of realtime
+    const pollInterval = setInterval(() => {
+      fetchData();
+    }, 30000);
 
     return () => {
-      supabase.removeChannel(channel);
+      clearInterval(pollInterval);
     };
-  }, [navigate, toast, sendNotification]);
+  }, [navigate, toast]);
 
   useEffect(() => {
     let result = [...donations];
@@ -165,13 +160,13 @@ const VolunteerDashboard = () => {
   }, [donations, filters, searchQuery]);
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
+    await authClient.auth.signOut();
     navigate("/");
   };
 
   const handleAccept = async (id: string) => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session } } = await authClient.auth.getSession();
       if (!session) return;
 
       const { error } = await supabase
@@ -275,7 +270,7 @@ const VolunteerDashboard = () => {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => navigate(`/profile/${profile?.id}`)}
+                onClick={() => navigate("/volunteer/edit-profile")}
                 className="rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800"
               >
                 <User className="w-5 h-5" />

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { authClient } from "@/integrations/supabase/authClient";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -25,7 +26,8 @@ import {
   Gift,
   MessageCircle,
   Image as ImageIcon,
-  AlertCircle
+  AlertCircle,
+  Phone
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { Database } from "@/integrations/supabase/types";
@@ -54,7 +56,7 @@ const DonationDetail = () => {
 
   const fetchData = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await authClient.auth.getUser();
       if (!user) {
         navigate("/auth");
         return;
@@ -420,7 +422,9 @@ const DonationDetail = () => {
                 </div>
                 <h3 className="font-semibold">Description</h3>
               </div>
-              <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed">{donation.description}</p>
+              <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed">
+                {donation.description.split('\n\n📍')[0]}
+              </p>
             </Card>
 
             {/* Embedded Map Section */}
@@ -442,28 +446,65 @@ const DonationDetail = () => {
                 <h3 className="font-semibold">People Involved</h3>
               </div>
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-3 bg-muted/30 rounded-xl">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-orange-500/10 flex items-center justify-center">
-                      <span className="text-sm font-semibold text-orange-500">
-                        {donorProfile?.full_name?.charAt(0) || "D"}
-                      </span>
+                <div className="p-3 bg-muted/30 rounded-xl">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-orange-500/10 flex items-center justify-center overflow-hidden">
+                        {donorProfile?.avatar_url ? (
+                          <img
+                            src={donorProfile.avatar_url}
+                            alt={donorProfile.full_name || "Donor"}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-sm font-semibold text-orange-500">
+                            {donorProfile?.full_name?.charAt(0) || "D"}
+                          </span>
+                        )}
+                      </div>
+                      <div>
+                        <p className="font-medium text-sm">{donorProfile?.full_name || "Unknown"}</p>
+                        <p className="text-xs text-muted-foreground">Donor</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium text-sm">{donorProfile?.full_name || "Unknown"}</p>
-                      <p className="text-xs text-muted-foreground">Donor</p>
-                    </div>
+                    <Badge variant="outline" className="rounded-full text-xs">Donor</Badge>
                   </div>
-                  <Badge variant="outline" className="rounded-full text-xs">Donor</Badge>
+                  {donorProfile?.phone && donation.donor_id !== currentUser?.id && (
+                    <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border/50">
+                      <Phone className="w-4 h-4 text-muted-foreground" />
+                      <a
+                        href={`tel:${donorProfile.phone}`}
+                        className="flex-1 text-sm font-medium text-primary hover:underline"
+                      >
+                        {donorProfile.phone}
+                      </a>
+                      <Button
+                        size="sm"
+                        onClick={() => window.location.href = `tel:${donorProfile.phone}`}
+                        className="rounded-full h-8 gap-2"
+                      >
+                        <Phone className="w-3.5 h-3.5" />
+                        Call Donor
+                      </Button>
+                    </div>
+                  )}
                 </div>
 
                 {volunteerProfile && (
                   <div className="flex items-center justify-between p-3 bg-muted/30 rounded-xl">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
-                        <span className="text-sm font-semibold text-blue-500">
-                          {volunteerProfile.full_name?.charAt(0) || "V"}
-                        </span>
+                      <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center overflow-hidden">
+                        {volunteerProfile.avatar_url ? (
+                          <img
+                            src={volunteerProfile.avatar_url}
+                            alt={volunteerProfile.full_name || "Volunteer"}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-sm font-semibold text-blue-500">
+                            {volunteerProfile.full_name?.charAt(0) || "V"}
+                          </span>
+                        )}
                       </div>
                       <div>
                         <p className="font-medium text-sm">{volunteerProfile.full_name}</p>
