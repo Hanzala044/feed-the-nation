@@ -98,8 +98,57 @@ All colors MUST be HSL.
     @apply border-border;
   }
 
+  html {
+    /* Prevent font size adjustments on orientation change */
+    -webkit-text-size-adjust: 100%;
+    -moz-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    /* Smooth scrolling */
+    scroll-behavior: smooth;
+    /* Prevent horizontal scroll */
+    overflow-x: hidden;
+  }
+
   body {
     @apply bg-background text-foreground;
+    /* Prevent horizontal scroll */
+    overflow-x: hidden;
+    width: 100%;
+    position: relative;
+    /* Improve font rendering */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Touch optimization */
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Ensure all containers don't overflow */
+  #root {
+    width: 100%;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Mobile-specific optimizations */
+  @media (max-width: 768px) {
+    /* Improve touch targets */
+    button, a, input, select, textarea {
+      min-height: 44px;
+      min-width: 44px;
+    }
+
+    /* Optimize input fields for mobile */
+    input, select, textarea {
+      font-size: 16px; /* Prevents zoom on iOS */
+    }
+  }
+
+  /* Prevent zoom on inputs for iOS */
+  @supports (-webkit-touch-callout: none) {
+    input, select, textarea {
+      font-size: 16px;
+    }
   }
 }
 
@@ -407,5 +456,127 @@ All colors MUST be HSL.
   }
   50% {
     scale: 1.2;
+  }
+}
+
+/* Mobile Responsiveness Utilities */
+@layer utilities {
+  /* Safe area insets for notched devices */
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .safe-left {
+    padding-left: env(safe-area-inset-left);
+  }
+
+  .safe-right {
+    padding-right: env(safe-area-inset-right);
+  }
+
+  /* Responsive container that adapts to screen size */
+  .responsive-container {
+    width: 100%;
+    max-width: 100vw;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  @media (min-width: 640px) {
+    .responsive-container {
+      max-width: 640px;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .responsive-container {
+      max-width: 768px;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .responsive-container {
+      max-width: 1024px;
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .responsive-container {
+      max-width: 1280px;
+    }
+  }
+
+  /* Prevent content overflow */
+  .no-overflow {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  /* Mobile-friendly text sizes */
+  .text-mobile-xs {
+    font-size: clamp(0.75rem, 2vw, 0.875rem);
+  }
+
+  .text-mobile-sm {
+    font-size: clamp(0.875rem, 2.5vw, 1rem);
+  }
+
+  .text-mobile-base {
+    font-size: clamp(1rem, 3vw, 1.125rem);
+  }
+
+  .text-mobile-lg {
+    font-size: clamp(1.125rem, 3.5vw, 1.25rem);
+  }
+
+  .text-mobile-xl {
+    font-size: clamp(1.25rem, 4vw, 1.5rem);
+  }
+
+  .text-mobile-2xl {
+    font-size: clamp(1.5rem, 5vw, 2rem);
+  }
+
+  .text-mobile-3xl {
+    font-size: clamp(1.875rem, 6vw, 2.5rem);
+  }
+
+  /* Touch-friendly spacing */
+  .touch-target {
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Prevent images from overflowing */
+  img, video, iframe {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Responsive grid that stacks on mobile */
+  .mobile-stack {
+    display: grid;
+    gap: 1rem;
+  }
+
+  @media (min-width: 768px) {
+    .mobile-stack {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .mobile-stack {
+      grid-template-columns: repeat(3, 1fr);
+    }
   }
 }
