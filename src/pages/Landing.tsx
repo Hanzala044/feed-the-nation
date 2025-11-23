@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Moon, Sun, X, QrCode, ArrowRight, Heart, Users, TrendingUp } from "lucide-react";
-import logo from "@/assets/logo.svg";
+import logo from "@/assets/logo.png";
 import { useTheme } from "@/components/ThemeProvider";
 import { useState } from "react";
 
@@ -57,9 +57,9 @@ const Landing = () => {
             onClick={() => setShowLogoModal(true)}
             className="flex items-center gap-3 group hover:scale-105 transition-transform duration-300"
           >
-            <div className="relative">
-              <img src={logo} alt="FOOD 4 U" className="w-10 h-10 rounded-xl shadow-lg" />
-              <div className="absolute inset-0 bg-gradient-to-br from-[#ff6b35] to-transparent rounded-xl opacity-0 group-hover:opacity-50 transition-opacity blur-sm" />
+            <div className="relative w-12 h-12">
+              <img src={logo} alt="FOOD 4 U" className="w-full h-full object-cover rounded-full shadow-lg ring-2 ring-white/20" />
+              <div className="absolute inset-0 bg-gradient-to-br from-[#ff6b35] to-transparent rounded-full opacity-0 group-hover:opacity-30 transition-opacity" />
             </div>
             <span className="text-white dark:text-white light:text-slate-900 font-bold text-xl tracking-tight">
               FOOD 4 U
@@ -260,10 +260,8 @@ const Landing = () => {
             </button>
 
             <div className="flex justify-center mb-6">
-              <div className="w-32 h-32 rounded-3xl bg-gradient-to-br from-[#ff6b35] to-[#ff8c42] p-1 shadow-2xl">
-                <div className="w-full h-full rounded-[22px] bg-white/20 dark:bg-white/20 light:bg-white backdrop-blur-md border border-white/30 dark:border-white/30 light:border-slate-200 p-6 flex items-center justify-center">
-                  <img src={logo} alt="FOOD 4 U" className="w-full h-full object-contain" />
-                </div>
+              <div className="w-32 h-32 rounded-full p-1 shadow-2xl ring-4 ring-[#ff6b35]/30">
+                <img src={logo} alt="FOOD 4 U" className="w-full h-full object-cover rounded-full" />
               </div>
             </div>
 

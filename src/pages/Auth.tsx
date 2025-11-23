@@ -7,9 +7,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { supabase } from "@/integrations/supabase/client";
 import { authClient } from "@/integrations/supabase/authClient";
 import { useToast } from "@/hooks/use-toast";
-import { Moon, Sun, X, ArrowLeft, Mail, Lock, User, CheckCircle2 } from "lucide-react";
+import { Moon, Sun, X, ArrowLeft, Mail, Lock, User, CheckCircle2, Gift } from "lucide-react";
 import { z } from "zod";
-import logo from "@/assets/logo.svg";
+import logo from "@/assets/logo.png";
 import { useTheme } from "@/components/ThemeProvider";
 import { PasswordStrengthIndicator } from "@/components/PasswordStrengthIndicator";
 
@@ -36,6 +36,7 @@ const Auth = () => {
     email: "",
     password: "",
     fullName: "",
+    referralCode: "",
   });
 
   useEffect(() => {
@@ -166,12 +167,33 @@ const Auth = () => {
         if (error) throw error;
 
         if (data?.user) {
+          // Validate referral code if provided
+          let validReferralCode = null;
+          if (formData.referralCode.trim()) {
+            const { data: referrerProfile } = await supabase
+              .from("profiles")
+              .select("id, referral_code")
+              .eq("referral_code", formData.referralCode.trim().toUpperCase())
+              .single();
+
+            if (referrerProfile) {
+              validReferralCode = referrerProfile.referral_code;
+            } else {
+              toast({
+                title: "Invalid Referral Code",
+                description: "The referral code you entered is not valid. Continuing without referral.",
+                variant: "destructive",
+              });
+            }
+          }
+
           // Create profile in main database
           await supabase.from("profiles").insert({
             id: data.user.id,
             email: formData.email,
             full_name: formData.fullName,
             role: role,
+            referred_by: validReferralCode,
             created_at: new Date().toISOString(),
           });
 
@@ -181,7 +203,7 @@ const Auth = () => {
           });
 
           // Clear form
-          setFormData({ email: "", password: "", fullName: "" });
+          setFormData({ email: "", password: "", fullName: "", referralCode: "" });
           setMode("login");
         }
       } else {
@@ -285,11 +307,11 @@ const Auth = () => {
             <div className="hidden lg:flex flex-col justify-center space-y-8">
               <button
                 onClick={() => setShowLogoModal(true)}
-                className="flex items-center gap-3 group hover:scale-105 transition-transform duration-300"
+                className="flex items-center gap-4 group hover:scale-105 transition-transform duration-300"
               >
-                <div className="relative">
-                  <img src={logo} alt="FOOD 4 U" className="w-16 h-16 rounded-2xl shadow-2xl" />
-                  <div className="absolute inset-0 bg-gradient-to-br from-[#ff6b35] to-transparent rounded-2xl opacity-0 group-hover:opacity-50 transition-opacity blur-sm" />
+                <div className="relative w-20 h-20">
+                  <img src={logo} alt="FOOD 4 U" className="w-full h-full object-cover rounded-full shadow-2xl ring-2 ring-white/20" />
+                  <div className="absolute inset-0 bg-gradient-to-br from-[#ff6b35] to-transparent rounded-full opacity-0 group-hover:opacity-30 transition-opacity" />
                 </div>
                 <span className="text-white dark:text-white light:text-slate-900 font-bold text-3xl tracking-tight">
                   FOOD 4 U
@@ -338,7 +360,9 @@ const Auth = () => {
                     onClick={() => setShowLogoModal(true)}
                     className="flex items-center gap-3 group hover:scale-105 transition-transform duration-300"
                   >
-                    <img src={logo} alt="FOOD 4 U" className="w-12 h-12 rounded-xl shadow-lg" />
+                    <div className="relative w-14 h-14">
+                      <img src={logo} alt="FOOD 4 U" className="w-full h-full object-cover rounded-full shadow-lg ring-2 ring-white/20" />
+                    </div>
                     <span className="text-white dark:text-white light:text-slate-900 font-bold text-2xl">
                       FOOD 4 U
                     </span>
@@ -435,6 +459,27 @@ const Auth = () => {
                             Volunteer
                           </button>
                         </div>
+                      </div>
+
+                      {/* Referral Code */}
+                      <div className="space-y-2">
+                        <Label htmlFor="referralCode" className="text-white/90 dark:text-white/90 light:text-slate-700 text-sm font-medium flex items-center gap-2">
+                          <Gift className="w-4 h-4" />
+                          Referral Code (Optional)
+                        </Label>
+                        <Input
+                          id="referralCode"
+                          type="text"
+                          placeholder="Enter referral code"
+                          value={formData.referralCode}
+                          onChange={(e) =>
+                            setFormData({ ...formData, referralCode: e.target.value.toUpperCase() })
+                          }
+                          className="h-12 bg-white/10 dark:bg-white/10 light:bg-slate-50 border-white/20 dark:border-white/20 light:border-slate-300 text-white dark:text-white light:text-slate-900 placeholder:text-white/50 dark:placeholder:text-white/50 light:placeholder:text-slate-400 rounded-xl backdrop-blur-md focus:ring-2 focus:ring-[#ff6b35] transition-all uppercase"
+                        />
+                        <p className="text-xs text-white/60 dark:text-white/60 light:text-slate-500">
+                          Get bonus points by using a friend's referral code!
+                        </p>
                       </div>
                     </>
                   )}
@@ -590,10 +635,8 @@ const Auth = () => {
             </button>
 
             <div className="flex justify-center mb-6">
-              <div className="w-32 h-32 rounded-3xl bg-gradient-to-br from-[#ff6b35] to-[#ff8c42] p-1 shadow-2xl">
-                <div className="w-full h-full rounded-[22px] bg-white/20 dark:bg-white/20 light:bg-white backdrop-blur-md border border-white/30 dark:border-white/30 light:border-slate-200 p-6 flex items-center justify-center">
-                  <img src={logo} alt="FOOD 4 U" className="w-full h-full object-contain" />
-                </div>
+              <div className="w-32 h-32 rounded-full p-1 shadow-2xl ring-4 ring-[#ff6b35]/30">
+                <img src={logo} alt="FOOD 4 U" className="w-full h-full object-cover rounded-full" />
               </div>
             </div>
 

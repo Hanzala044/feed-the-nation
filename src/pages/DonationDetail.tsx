@@ -27,10 +27,13 @@ import {
   MessageCircle,
   Image as ImageIcon,
   AlertCircle,
-  Phone
+  Phone,
+  Download
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { shareDonationPDF } from "@/utils/pdfGenerator";
 import type { Database } from "@/integrations/supabase/types";
+import logo from "@/assets/logo.png";
 
 type Donation = Database["public"]["Tables"]["donations"]["Row"];
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
@@ -256,6 +259,52 @@ const DonationDetail = () => {
     }
   };
 
+  const handleDownloadPDF = async () => {
+    if (!donation) return;
+
+    try {
+      toast({
+        title: "Generating PDF...",
+        description: "Please wait while we prepare your donation receipt.",
+      });
+
+      const userType = donation.donor_id === currentUser?.id ? "donor" : "volunteer";
+      const userName = userType === "donor" ? donorProfile?.full_name : volunteerProfile?.full_name;
+
+      await shareDonationPDF({
+        userType,
+        userName: userName || "User",
+        donations: [{
+          id: donation.id,
+          title: donation.title,
+          description: donation.description || "",
+          food_type: donation.food_type,
+          quantity: parseFloat(donation.quantity) || 0,
+          location: `${donation.pickup_address}, ${donation.pickup_city}`,
+          status: donation.status,
+          created_at: donation.created_at,
+          pickup_time: donation.pickup_time || undefined,
+          expiry_date: donation.expiry_date || undefined,
+          volunteer_name: volunteerProfile?.full_name || undefined,
+          donor_name: donorProfile?.full_name || undefined,
+        }],
+        logo: logo,
+      });
+
+      toast({
+        title: "Success!",
+        description: "Your donation receipt is ready to share.",
+      });
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      toast({
+        title: "Error",
+        description: "Failed to generate PDF. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
       {/* Premium Header Bar */}
@@ -284,17 +333,20 @@ const DonationDetail = () => {
             <Button
               variant="ghost"
               size="icon"
-              onClick={handleShare}
-              className="rounded-xl hover:bg-muted/80 transition-colors"
+              onClick={handleDownloadPDF}
+              className="rounded-xl hover:bg-muted/80 transition-colors text-[#ff6b35] hover:text-[#ff8c42]"
+              title="Download PDF Receipt"
             >
-              <Share2 className="w-4 h-4" />
+              <Download className="w-4 h-4" />
             </Button>
             <Button
               variant="ghost"
               size="icon"
+              onClick={handleShare}
               className="rounded-xl hover:bg-muted/80 transition-colors"
+              title="Share Link"
             >
-              <MoreHorizontal className="w-4 h-4" />
+              <Share2 className="w-4 h-4" />
             </Button>
           </div>
         </div>
@@ -425,6 +477,28 @@ const DonationDetail = () => {
               <p className="text-muted-foreground whitespace-pre-wrap leading-relaxed">
                 {donation.description.split('\n\n📍')[0]}
               </p>
+            </Card>
+
+            {/* Download PDF Card */}
+            <Card className="p-6 border-2 border-[#ff6b35]/30 bg-gradient-to-br from-[#ff6b35]/5 via-purple-500/5 to-transparent">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#ff6b35] to-[#ff8c42] flex items-center justify-center shadow-lg">
+                    <Download className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-slate-900 dark:text-white">Download Receipt</h3>
+                    <p className="text-sm text-slate-600 dark:text-slate-400">Get a PDF copy of this donation</p>
+                  </div>
+                </div>
+                <Button
+                  onClick={handleDownloadPDF}
+                  className="rounded-xl bg-gradient-to-r from-[#ff6b35] to-[#ff8c42] hover:from-[#ff8c42] hover:to-[#ff6b35] text-white shadow-lg shadow-[#ff6b35]/30"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Download PDF
+                </Button>
+              </div>
             </Card>
 
             {/* Embedded Map Section */}

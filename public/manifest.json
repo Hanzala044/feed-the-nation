@@ -17,7 +17,7 @@ Join us in building a more compassionate, sustainable future—one plate at a ti
       "src": "/logo.svg",
       "sizes": "any",
       "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "/logo-192.png",
@@ -40,14 +40,14 @@ Join us in building a more compassionate, sustainable future—one plate at a ti
       "short_name": "Donate",
       "description": "Create a new food donation",
       "url": "/donor/create-donation",
-      "icons": [{ "src": "/logo.svg", "sizes": "96x96" }]
+      "icons": [{ "src": "/logo.svg", "sizes": "any" }]
     },
     {
       "name": "View Feed",
       "short_name": "Feed",
       "description": "Browse available donations",
       "url": "/feed",
-      "icons": [{ "src": "/logo.svg", "sizes": "96x96" }]
+      "icons": [{ "src": "/logo.svg", "sizes": "any" }]
     }
   ]
 }

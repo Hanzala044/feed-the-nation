@@ -33,7 +33,9 @@ import {
   Filter,
   RefreshCw,
   Lock,
-  Mail
+  Mail,
+  Phone,
+  Home
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 
@@ -49,6 +51,8 @@ interface User {
   created_at: string;
   points?: number;
   badge?: string;
+  phone?: string;
+  address?: string;
 }
 
 interface Donation {
@@ -660,10 +664,25 @@ const AdminDashboard = () => {
                             {user.full_name.charAt(0)}
                           </span>
                         </div>
-                        <div>
+                        <div className="flex-1">
                           <p className="font-semibold">{user.full_name}</p>
-                          <p className="text-sm text-muted-foreground">{user.email}</p>
-                          <div className="flex items-center gap-2 mt-1">
+                          <p className="text-sm text-muted-foreground flex items-center gap-1">
+                            <Mail className="w-3 h-3" />
+                            {user.email}
+                          </p>
+                          {user.phone && (
+                            <p className="text-sm text-muted-foreground flex items-center gap-1 mt-0.5">
+                              <Phone className="w-3 h-3" />
+                              {user.phone}
+                            </p>
+                          )}
+                          {user.address && (
+                            <p className="text-sm text-muted-foreground flex items-center gap-1 mt-0.5">
+                              <Home className="w-3 h-3" />
+                              {user.address}
+                            </p>
+                          )}
+                          <div className="flex items-center gap-2 mt-2">
                             <Badge variant="outline" className="text-xs">{user.points} pts</Badge>
                             <Badge className="text-xs">{user.badge}</Badge>
                           </div>
@@ -729,10 +748,25 @@ const AdminDashboard = () => {
                             {user.full_name.charAt(0)}
                           </span>
                         </div>
-                        <div>
+                        <div className="flex-1">
                           <p className="font-semibold">{user.full_name}</p>
-                          <p className="text-sm text-muted-foreground">{user.email}</p>
-                          <div className="flex items-center gap-2 mt-1">
+                          <p className="text-sm text-muted-foreground flex items-center gap-1">
+                            <Mail className="w-3 h-3" />
+                            {user.email}
+                          </p>
+                          {user.phone && (
+                            <p className="text-sm text-muted-foreground flex items-center gap-1 mt-0.5">
+                              <Phone className="w-3 h-3" />
+                              {user.phone}
+                            </p>
+                          )}
+                          {user.address && (
+                            <p className="text-sm text-muted-foreground flex items-center gap-1 mt-0.5">
+                              <Home className="w-3 h-3" />
+                              {user.address}
+                            </p>
+                          )}
+                          <div className="flex items-center gap-2 mt-2">
                             <Badge variant="outline" className="text-xs">{user.points} pts</Badge>
                             <Badge className="text-xs">{user.badge}</Badge>
                           </div>
