@@ -15,14 +15,33 @@ const QRScanner = () => {
     const start = async () => {
       try {
         setError(null);
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+
+        // Check if camera is available
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          setError("Camera not supported on this device");
+          return;
+        }
+
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: "environment",
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          }
+        });
+
         if (videoRef.current) {
           videoRef.current.srcObject = stream as MediaStream;
           await videoRef.current.play();
         }
         setScanning(true);
       } catch (e: any) {
-        setError(e?.message || "Camera access failed");
+        const errorMsg = e?.name === "NotAllowedError"
+          ? "Camera permission denied. Please allow camera access in your browser settings."
+          : e?.name === "NotFoundError"
+          ? "No camera found on this device"
+          : e?.message || "Camera access failed";
+        setError(errorMsg);
       }
     };
     start();

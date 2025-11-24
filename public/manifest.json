@@ -8,10 +8,13 @@ Every meal saved is a life touched. We bridge the gap between abundance and need
 Join us in building a more compassionate, sustainable future—one plate at a time.
 .",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "background_color": "#1a3a2e",
   "theme_color": "#1a3a2e",
   "orientation": "portrait-primary",
+  "permissions": ["camera", "geolocation"],
   "icons": [
     {
       "src": "/logo.svg",

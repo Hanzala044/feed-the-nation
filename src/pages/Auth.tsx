@@ -86,10 +86,16 @@ const Auth = () => {
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/auth`,
+          skipBrowserRedirect: false,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
         },
       });
 
       if (error) throw error;
+      // Don't setLoading(false) here - let the redirect happen
     } catch (error: any) {
       toast({
         title: "Error",
@@ -167,33 +173,12 @@ const Auth = () => {
         if (error) throw error;
 
         if (data?.user) {
-          // Validate referral code if provided
-          let validReferralCode = null;
-          if (formData.referralCode.trim()) {
-            const { data: referrerProfile } = await supabase
-              .from("profiles")
-              .select("id, referral_code")
-              .eq("referral_code", formData.referralCode.trim().toUpperCase())
-              .single();
-
-            if (referrerProfile) {
-              validReferralCode = referrerProfile.referral_code;
-            } else {
-              toast({
-                title: "Invalid Referral Code",
-                description: "The referral code you entered is not valid. Continuing without referral.",
-                variant: "destructive",
-              });
-            }
-          }
-
           // Create profile in main database
           await supabase.from("profiles").insert({
             id: data.user.id,
             email: formData.email,
             full_name: formData.fullName,
             role: role,
-            referred_by: validReferralCode,
             created_at: new Date().toISOString(),
           });
 
