@@ -3,8 +3,12 @@
   publish = "dist"
 
 [build.environment]
+  # These are PUBLIC client-side keys that are safe to expose in the build output
+  # Vite embeds all VITE_* variables into the client bundle - this is expected
+  SECRETS_SCAN_OMIT_KEYS = "VITE_SUPABASE_URL,VITE_SUPABASE_PUBLISHABLE_KEY,VITE_AUTH_SUPABASE_URL,VITE_AUTH_SUPABASE_ANON_KEY,VITE_SUPABASE_PROJECT_ID"
+
   # Omit documentation and archive files from secret scanning
-  SECRETS_SCAN_OMIT_PATHS = "DEPLOYMENT.md,supabase/migrations/archive/**"
+  SECRETS_SCAN_OMIT_PATHS = "DEPLOYMENT.md,supabase/migrations/archive/**,supabase/config.toml,dist/**"
 
 [[redirects]]
   from = "/*"
