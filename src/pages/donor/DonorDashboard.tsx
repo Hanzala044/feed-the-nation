@@ -40,7 +40,7 @@ import { DonationMessaging } from "@/components/DonationMessaging";
 import { UnlockedBadges } from "@/components/UnlockedBadges";
 import { ReferralCard } from "@/components/ReferralCard";
 import type { Database } from "@/integrations/supabase/types";
-import logo from "@/assets/logo.png";
+import logo from "@/assets/logo.jpeg";
 
 type Donation = Database["public"]["Tables"]["donations"]["Row"];
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];

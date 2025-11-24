@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Moon, Sun, X, QrCode, ArrowRight, Heart, Users, TrendingUp } from "lucide-react";
-import logo from "@/assets/logo.png";
+import logo from "@/assets/logo.jpeg";
 import { useTheme } from "@/components/ThemeProvider";
 import { useState } from "react";
 

@@ -33,7 +33,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { shareDonationPDF } from "@/utils/pdfGenerator";
 import type { Database } from "@/integrations/supabase/types";
-import logo from "@/assets/logo.png";
+import logo from "@/assets/logo.jpeg";
 
 type Donation = Database["public"]["Tables"]["donations"]["Row"];
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];

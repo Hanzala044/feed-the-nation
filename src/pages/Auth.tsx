@@ -9,7 +9,7 @@ import { authClient } from "@/integrations/supabase/authClient";
 import { useToast } from "@/hooks/use-toast";
 import { Moon, Sun, X, ArrowLeft, Mail, Lock, User, CheckCircle2, Gift } from "lucide-react";
 import { z } from "zod";
-import logo from "@/assets/logo.png";
+import logo from "@/assets/logo.jpeg";
 import { useTheme } from "@/components/ThemeProvider";
 import { PasswordStrengthIndicator } from "@/components/PasswordStrengthIndicator";
 
