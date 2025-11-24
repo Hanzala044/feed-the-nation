@@ -14,7 +14,7 @@ Join us in building a more compassionate, sustainable future—one plate at a ti
   "background_color": "#1a3a2e",
   "theme_color": "#1a3a2e",
   "orientation": "portrait-primary",
-  "permissions": ["camera", "geolocation"],
+  "permissions": ["camera", "geolocation", "notifications"],
   "icons": [
     {
       "src": "/logo.svg",

@@ -61,13 +61,37 @@ export const useNotifications = (userId: string | undefined) => {
     }
   };
 
-  const sendNotification = (title: string, body: string) => {
+  const sendNotification = async (title: string, body: string) => {
     if (notificationsEnabled && Notification.permission === "granted") {
-      new Notification(title, {
-        body,
-        icon: "/favicon.ico",
-        badge: "/favicon.ico",
-      });
+      // Use service worker notification if available (shows even when app is closed)
+      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+        try {
+          const registration = await navigator.serviceWorker.ready;
+          await registration.showNotification(title, {
+            body,
+            icon: "/logo-192.png",
+            badge: "/logo-192.png",
+            vibrate: [200, 100, 200],
+            tag: 'food4u-notification',
+            requireInteraction: false,
+          });
+        } catch (error) {
+          console.error('Service worker notification failed:', error);
+          // Fallback to regular notification
+          new Notification(title, {
+            body,
+            icon: "/logo-192.png",
+            badge: "/logo-192.png",
+          });
+        }
+      } else {
+        // Fallback to regular notification
+        new Notification(title, {
+          body,
+          icon: "/logo-192.png",
+          badge: "/logo-192.png",
+        });
+      }
     }
   };
 
