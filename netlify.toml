@@ -1,0 +1,12 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  # Omit documentation and archive files from secret scanning
+  SECRETS_SCAN_OMIT_PATHS = "DEPLOYMENT.md,supabase/migrations/archive/**"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

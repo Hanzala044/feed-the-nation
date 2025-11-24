@@ -23,21 +23,25 @@ This ensures React Router works correctly with direct URL navigation.
 
 Go to: **Site settings → Environment variables → Add a variable**
 
-Add these **4 environment variables** (ONLY these - do NOT add service role keys):
+Add these **4 environment variables** (get values from your `.env` file):
 
 ```env
 VITE_SUPABASE_URL
-Value: https://uhuctkswxybirvzwhehb.supabase.co
+Value: [Your main Supabase project URL]
 
 VITE_SUPABASE_PUBLISHABLE_KEY
-Value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVodWN0a3N3eHliaXJ2endoZWhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1NDE4ODYsImV4cCI6MjA3ODExNzg4Nn0.RJVhjHTa_-8U7n9YJvXpXTqG8Onwd6Da_7TeLizaJas
+Value: [Your main Supabase anon/public key]
 
 VITE_AUTH_SUPABASE_URL
-Value: https://bbbxtrcvhrfvexxchwob.supabase.co
+Value: [Your auth Supabase project URL]
 
 VITE_AUTH_SUPABASE_ANON_KEY
-Value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJiYnh0cmN2aHJmdmV4eGNod29iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM2MzUwNjYsImV4cCI6MjA3OTIxMTA2Nn0.J2rXvb_nvSAk-jWhfgX8Dv6OHwiJ0r9bUW6Ky6rMqS8
+Value: [Your auth Supabase anon key]
 ```
+
+**Where to find these values:**
+- Copy from your local `.env` file, OR
+- Get from Supabase Dashboard → Project Settings → API
 
 ⚠️ **SECURITY NOTE:** Never add `VITE_SUPABASE_SERVICE_ROLE_KEY` or `VITE_SUPABASE_PROJECT_ID` to Netlify!
 Service role keys bypass Row Level Security and must never be exposed to clients.
@@ -63,13 +67,13 @@ Output Directory: dist
 
 ### Step 3: Add Environment Variables
 
-In the deployment configuration, add these **4 variables** (ONLY these):
+In the deployment configuration, add these **4 variables** (get values from `.env`):
 
 ```env
-VITE_SUPABASE_URL = https://uhuctkswxybirvzwhehb.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVodWN0a3N3eHliaXJ2endoZWhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1NDE4ODYsImV4cCI6MjA3ODExNzg4Nn0.RJVhjHTa_-8U7n9YJvXpXTqG8Onwd6Da_7TeLizaJas
-VITE_AUTH_SUPABASE_URL = https://bbbxtrcvhrfvexxchwob.supabase.co
-VITE_AUTH_SUPABASE_ANON_KEY = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJiYnh0cmN2aHJmdmV4eGNod29iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM2MzUwNjYsImV4cCI6MjA3OTIxMTA2Nn0.J2rXvb_nvSAk-jWhfgX8Dv6OHwiJ0r9bUW6Ky6rMqS8
+VITE_SUPABASE_URL = [Your main Supabase URL]
+VITE_SUPABASE_PUBLISHABLE_KEY = [Your anon key]
+VITE_AUTH_SUPABASE_URL = [Your auth Supabase URL]
+VITE_AUTH_SUPABASE_ANON_KEY = [Your auth anon key]
 ```
 
 ⚠️ **SECURITY NOTE:** Do NOT add service role keys to Vercel!
